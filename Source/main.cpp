@@ -24,7 +24,7 @@ void fnDialog(const std::vector<std::pair<std::wstring, bool>>& entrys) {
 	buf += L"    " + begin;
 	for (int i = 0; i < 44; ++i) buf += L"\u2588";
 	buf += end + L"\n";
-	buf += begin + L"-----------------The-Witness-Trainer-----------------" + end + L"\n";
+	buf += begin + L"---------survivalizeed's-The-Witness-Trainer---------" + end + L"\n";
 	for (auto& iter : entrys) {
 		std::wstring tmp = iter.first;
 		if (iter.second) {
@@ -82,7 +82,9 @@ void fnFly(std::shared_ptr<Trainer> witness, bool active) {
 int main() {
 	std::shared_ptr<Trainer> witness = std::make_shared<Trainer>("witness64_d3d11.exe");
 	witness->IdleWait("You have to be ingame before you open the trainer!\nSearching for witness64_d3d11.exe ...", "Found witness64_d3d11.exe");
-	
+	std::cout << "To Navigate back to the menu, press backspace";
+	Sleep(4000);
+
 	std::vector<std::pair<std::wstring, bool>> menu = 
 	{{L"Numpad-0------------GameChanger", false},
 	{L"Numpad-1--------------------Fun", false},
