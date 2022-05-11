@@ -5,8 +5,13 @@
 #include <string>
 #include <fcntl.h>
 #include <io.h>
-#include "Trainer.h"
+#include <fstream>
 
+#include "Trainer.h"
+#include "SimpleConfigReader.h"
+#include "../resource.h"
+
+#pragma comment(lib, "winmm.lib")
 #define log(x)\
 std::cout << x << "\n"
 #define input(key)\
@@ -80,29 +85,57 @@ void fnFly(std::shared_ptr<Trainer> witness, bool active) {
 }
 
 int main() {
+	RECT r;
+	GetWindowRect(GetConsoleWindow(), &r);
+	MoveWindow(GetConsoleWindow(), r.left, r.top, 635, 500, TRUE);
+
+	std::cout << "To Navigate back to the menu, press backspace\n";
 	std::shared_ptr<Trainer> witness = std::make_shared<Trainer>("witness64_d3d11.exe");
 	witness->IdleWait("You have to be ingame before you open the trainer!\nSearching for witness64_d3d11.exe ...", "Found witness64_d3d11.exe");
-	std::cout << "To Navigate back to the menu, press backspace";
-	Sleep(4000);
+	std::ifstream checkEmpty("C:\\Users\\Public\\Documents\\sTWTsettings.conf");
+	std::ofstream settings;
+	if (!checkEmpty.good()) {
+		settings.open("C:\\Users\\Public\\Documents\\sTWTsettings.conf", std::ios::out);
+		settings << "FlySpeed=25;\nSprintSpeed=25;\nPlayTune=1";
+		settings.close();
+	}
+	checkEmpty.close();
+	SCR reader("C:\\Users\\Public\\Documents\\sTWTsettings.conf");
+
 
 	std::vector<std::pair<std::wstring, bool>> menu = 
 	{{L"Numpad-0------------GameChanger", false},
 	{L"Numpad-1--------------------Fun", false},
-	{L"Numpad-2-------------------Misc", false}};
+	{L"Numpad-2-------------------Misc", false},
+	{L"Numpad-3-------------------Tune", false} };
 	
 	std::vector<std::pair<std::wstring, bool>> gamechanger =
 	{{L"Numpad-0--------------------Fly", false},
 	{L"Numpad-1-----------FasterSprint", false },
-	{L"Numpad-2-------AllSolutionsWork", false } };
+	{L"Numpad-2-------AllSolutionsWork", false },
+	{L"Numpad-3-------------LeaveSolve", false},
+	{L"Numpad-4---LeaveSolveEnviroment", false},
+	{L"Numpad-5-----------SavePosition", false},
+	{L"Numpad-6---------MoveToPosition", false} };
 
 	std::vector<std::pair<std::wstring, bool>> fun =
-	{ {L"Numpad-0-------------NoNodLimit", false } };
+	{{L"Numpad-0-------------NoNodLimit", false } };
 
 	std::vector<std::pair<std::wstring, bool>> misc =
 	{{L"Numpad-0------------DisableSave", false },
 	{L"Numpad-1---DisableSaveNoMessage", false },
-	{L"Numpad-2----------OpenDirectory", false } };
+	{L"Numpad-2------OpenGameDirectory", false },
+	{L"Numpad-3-----------OpenSettings", false },
+	{L"Numpad-4---------ReloadSettings", false } };
 	
+	bool tune = false;
+	waveOutSetVolume(NULL, 0x33333333);
+	if (reader.GetEntry("PlayTune").value_or("0") == "1") {
+		PlaySound(MAKEINTRESOURCE(101), GetModuleHandle(NULL), SND_RESOURCE | SND_LOOP | SND_ASYNC);
+		tune = true;
+		menu[3].second = tune;
+	}
+
 	auto* cDialog = &menu;
 
 	fnDialog(*cDialog);
@@ -114,11 +147,13 @@ int main() {
 	witness->AddEntry("UpDownRotPitch", 0x006303C0, {}, 0);
 	witness->AddEntry("LeftRightRotYaw", 0x006303BC, {}, 0);
 	
-	bool fly, nosave, nosavemessage, nonodlimit, fastersprint, allsolutionswork;
-	fly = nosave = nosavemessage = nonodlimit = fastersprint = allsolutionswork = false;
+	bool fly, nosave, nosavemessage, nonodlimit, fastersprint, allsolutionswork, leavesolve, leavesolveenviroment;
+	fly = nosave = nosavemessage = nonodlimit = fastersprint = allsolutionswork = leavesolve = leavesolveenviroment = false;
 
 	bool menuAc = true, gamechangerAc, funAc, miscAc;
 	gamechangerAc = funAc = miscAc = false;
+
+	float x{}, y{}, z{};
 	for (;;) {	
 		if (input(VK_BACK)) {
 			cDialog = &menu;
@@ -159,7 +194,11 @@ int main() {
 			else if (miscAc) {
 				nosave = !nosave;
 				if (nosave) witness->Patch("DisableSave", 0x140064C09, { 0x90, 0x90, 0x90, 0x90, 0x90 });
-				else witness->WriteAddress(0x140064C09, { 0xE8, 0x42, 0x17, 0x00, 0x00 });
+				else {
+					witness->WriteAddress(0x140064C09, { 0xE8, 0x42, 0x17, 0x00, 0x00 });
+					misc[1].second = false;
+					nosavemessage = false;
+				}
 				misc[0].second = nosave;
 				fnDialog(*cDialog);
 				Sleep(200);
@@ -184,7 +223,11 @@ int main() {
 			else if (miscAc) {
 				nosavemessage = !nosavemessage;
 				if (nosavemessage) witness->Patch("DisableSaveNoMessage", 0x140064C09, { 0xB8, 0x01, 0x00, 0x00, 0x00 });
-				else witness->WriteAddress(0x140064C09, { 0xE8, 0x42, 0x17, 0x00, 0x00 });
+				else {
+					witness->WriteAddress(0x140064C09, { 0xE8, 0x42, 0x17, 0x00, 0x00 });
+					misc[0].second = false;
+					nosave = false;
+				}
 				misc[1].second = nosavemessage;
 				fnDialog(*cDialog);
 				Sleep(200);
@@ -203,11 +246,16 @@ int main() {
 			}
 			else if (gamechangerAc) {
 				allsolutionswork = !allsolutionswork;
-				if (allsolutionswork) witness->Patch("AllSolutions", 0x1400BF552, { 0xC6, 0x45, 0x0F, 0x01, 0xB0, 0x01, 0x90 });
-				else witness->Restore("AllSolutions");
+				if (allsolutionswork) witness->WriteAddress(0x1400BF552, { 0xC6, 0x45, 0x0F, 0x01, 0xB0, 0x01, 0x90 });
+				else {
+					witness->WriteAddress(0x1400BF552, { 0x88, 0x45, 0x0F, 0x84, 0xC0, 0x74, 0x6E});
+					witness->WriteAddress(0x14022ECFA, { 0xE8, 0x91, 0xC1, 0xE8, 0xFF });
+					gamechanger[3].second = false;
+					leavesolve = false;
+				}
 				gamechanger[2].second = allsolutionswork;
 				fnDialog(*cDialog);
-				Sleep(200);
+				Sleep(200); 
 			}
 			else if (miscAc) {
 				DWORD size = MAX_PATH;
@@ -217,19 +265,85 @@ int main() {
 				Sleep(200);
 			}
 		}
+		if (input(VK_NUMPAD3)) {
+			if (menuAc) {
+				if (tune) PlaySound(NULL, NULL, SND_ASYNC);
+				else PlaySound(MAKEINTRESOURCE(101), GetModuleHandle(NULL), SND_RESOURCE | SND_LOOP | SND_ASYNC);
+				tune = !tune;
+				menu[3].second = tune;
+				fnDialog(*cDialog);
+				Sleep(200);
+			}
+			if (gamechangerAc) {
+				leavesolve = !leavesolve;
+				if (leavesolve) {
+					witness->WriteAddress(0x1400BF552, { 0xC6, 0x45, 0x0F, 0x01, 0xB0, 0x01, 0x90 });
+					witness->WriteAddress(0x14022ECFA, { 0xE8, 0x31, 0x06, 0xE9, 0xFF });
+				}
+				else {
+					witness->WriteAddress(0x1400BF552, { 0x88, 0x45, 0x0F, 0x84, 0xC0, 0x74, 0x6E });
+					witness->WriteAddress(0x14022ECFA, { 0xE8, 0x91, 0xC1, 0xE8, 0xFF });
+					gamechanger[2].second = false;
+					allsolutionswork = false;
+				}
+				gamechanger[3].second = leavesolve;
+				fnDialog(*cDialog);
+				Sleep(200);
+			}
+			if (miscAc) {
+				system("notepad C:\\Users\\Public\\Documents\\sTWTsettings.conf");
+				Sleep(200);
+			}
+		}
+		if (input(VK_NUMPAD4)) {
+			if (gamechangerAc) {
+				leavesolveenviroment = !leavesolveenviroment;
+				if (leavesolveenviroment) 
+					witness->Patch("LeaveSolveEnviroment", 0x14022DCFF, { 0xC7, 0x87, 0xB8, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x41, 0xB4, 0x01 });
+				else witness->Restore("LeaveSolveEnviroment");
+				gamechanger[4].second = leavesolveenviroment;
+				fnDialog(*cDialog);
+				Sleep(200);
+			}
+			if (miscAc) {
+				reader.Reload();
+				Sleep(200);
+			}
+		}
+		if (input(VK_NUMPAD5)) {
+			if (gamechangerAc) {
+				x = witness->Read<float>("XPos");
+				y = witness->Read<float>("YPos");
+				z = witness->Read<float>("ZPos");
+				Sleep(200);
+			}
+		}
+		if (input(VK_NUMPAD6)) {
+			if (gamechangerAc) {
+				witness->Write("XPos", x);
+				witness->Write("YPos", y);
+				witness->Write("ZPos", z);
+				Sleep(200);
+			}
+		}
 		if (input(VK_LSHIFT) && fastersprint) {
-			witness->Write<float>("Speed", float(15));
+			auto speed = reader.GetEntry("SprintSpeed");
+			if (speed == std::nullopt || speed == "") MessageBoxA(NULL, "SprintSpeed no value", "Error", MB_ICONERROR);
+			else witness->Write<float>("Speed", std::stof(speed.value()));
 		}
 		if (input('W') && fly) {
 			float pitch = witness->Read<float>("UpDownRotPitch");
 			float yaw = witness->Read<float>("LeftRightRotYaw");
 			float yp = witness->Read<float>("YPos");
-			witness->Write("YPos", float(yp + (sinf(pitch) * 0.01)));
-			float xp = witness->Read<float>("XPos");
-			witness->Write("XPos", float(xp + (sinf(yaw) * 0.01)));
-			float zp = witness->Read<float>("ZPos");
-			witness->Write("ZPos", float(zp + (cosf(yaw) * 0.01)));
+			auto speed = reader.GetEntry("FlySpeed");
+			if (speed == std::nullopt || speed == "") MessageBoxA(NULL, "FlySpeed no value", "Error", MB_ICONERROR);
+			else {
+				witness->Write("YPos", float(yp + (sinf(pitch) * 0.0001 * std::stof(speed.value()))));
+				float xp = witness->Read<float>("XPos");
+				witness->Write("XPos", float(xp + (sinf(yaw) * 0.0001 * std::stof(speed.value()))));
+				float zp = witness->Read<float>("ZPos");
+				witness->Write("ZPos", float(zp + (cosf(yaw) * 0.0001 * std::stof(speed.value()))));
+			}
 		}
 	}
-
 }
