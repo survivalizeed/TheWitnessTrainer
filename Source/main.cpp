@@ -29,7 +29,7 @@ void fnDialog(const std::vector<std::pair<std::wstring, bool>>& entrys) {
 	buf += L"    " + begin;
 	for (int i = 0; i < 44; ++i) buf += L"\u2588";
 	buf += end + L"\n";
-	buf += begin + L"---------survivalizeed's-The-Witness-Trainer---------" + end + L"\n";
+	buf += begin + L"-\u058D\u058D\u058D\u058D\u058D\u058D\u058D-survivalizeed's-The-Witness-Trainer-\u058D\u058D\u058D\u058D\u058D\u058D\u058D-" + end + L"\n";
 	for (auto& iter : entrys) {
 		std::wstring tmp = iter.first;
 		if (iter.second) {
@@ -87,7 +87,7 @@ void fnFly(std::shared_ptr<Trainer> witness, bool active) {
 int main() {
 	RECT r;
 	GetWindowRect(GetConsoleWindow(), &r);
-	MoveWindow(GetConsoleWindow(), r.left, r.top, 635, 500, TRUE);
+	MoveWindow(GetConsoleWindow(), r.left, r.top, 635, 300, TRUE);
 
 	std::cout << "To Navigate back to the menu, press backspace\n";
 	std::shared_ptr<Trainer> witness = std::make_shared<Trainer>("witness64_d3d11.exe");
@@ -96,7 +96,7 @@ int main() {
 	std::ofstream settings;
 	if (!checkEmpty.good()) {
 		settings.open("C:\\Users\\Public\\Documents\\sTWTsettings.conf", std::ios::out);
-		settings << "FlySpeed=25;\nSprintSpeed=25;\nPlayTune=1";
+		settings << "FlySpeed=25;\nSprintSpeed=25;\nPlayTune=1;";
 		settings.close();
 	}
 	checkEmpty.close();
@@ -126,10 +126,11 @@ int main() {
 	{L"Numpad-1---DisableSaveNoMessage", false },
 	{L"Numpad-2------OpenGameDirectory", false },
 	{L"Numpad-3-----------OpenSettings", false },
-	{L"Numpad-4---------ReloadSettings", false } };
+	{L"Numpad-4---------ReloadSettings", false },
+	{L"Numpad-5---------------MuteGame", false } };
 	
 	bool tune = false;
-	waveOutSetVolume(NULL, 0x33333333);
+	waveOutSetVolume(NULL, 0xAAAAAAAA);
 	if (reader.GetEntry("PlayTune").value_or("0") == "1") {
 		PlaySound(MAKEINTRESOURCE(101), GetModuleHandle(NULL), SND_RESOURCE | SND_LOOP | SND_ASYNC);
 		tune = true;
@@ -147,8 +148,8 @@ int main() {
 	witness->AddEntry("UpDownRotPitch", 0x006303C0, {}, 0);
 	witness->AddEntry("LeftRightRotYaw", 0x006303BC, {}, 0);
 	
-	bool fly, nosave, nosavemessage, nonodlimit, fastersprint, allsolutionswork, leavesolve, leavesolveenviroment;
-	fly = nosave = nosavemessage = nonodlimit = fastersprint = allsolutionswork = leavesolve = leavesolveenviroment = false;
+	bool fly, nosave, nosavemessage, nonodlimit, fastersprint, allsolutionswork, leavesolve, leavesolveenviroment, mutegame;
+	fly = nosave = nosavemessage = nonodlimit = fastersprint = allsolutionswork = leavesolve = leavesolveenviroment = mutegame = false;
 
 	bool menuAc = true, gamechangerAc, funAc, miscAc;
 	gamechangerAc = funAc = miscAc = false;
@@ -315,6 +316,14 @@ int main() {
 				x = witness->Read<float>("XPos");
 				y = witness->Read<float>("YPos");
 				z = witness->Read<float>("ZPos");
+				Sleep(200);
+			}
+			if (miscAc) {
+				mutegame = !mutegame;
+				if (mutegame) witness->Patch("MuteGame", 0x1402A94B0, { 0xC3, 0x90, 0x90 });
+				else witness->Restore("MuteGame");
+				misc[5].second = mutegame;
+				fnDialog(*cDialog);
 				Sleep(200);
 			}
 		}
