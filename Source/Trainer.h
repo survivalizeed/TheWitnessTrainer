@@ -8,9 +8,12 @@
 #include <map>
 #include <concepts>
 #include <utility>
+#include <thread>
+#include <functional>
 
 
 class Trainer {
+	bool procValid = false;
 	HANDLE hProcess;
 	std::string_view procName;
 	DWORD procId;
@@ -26,12 +29,14 @@ public:
 		hProcess = OpenProcess(PROCESS_ALL_ACCESS, NULL, procId);
 	}
 
+	void StartCheckThread();
+
 	void AddEntry(std::string_view name, uintptr_t dynamicBaseOffset, const std::vector<unsigned int>& offsets, uintptr_t endoffset);
 
-	bool IdleWait(std::string_view searchmessage,std::string_view foundmessage);
+	bool IdleWait(std::string_view searchmessage,std::string_view foundmessage, std::function<void()> callback);
 
 	template<typename Ret>
-	Ret& Read(std::string_view name) {
+	Ret Read(std::string_view name) {
 		Ret value{};
 		ReadProcessMemory(hProcess, (BYTE*)entrys[name], &value, sizeof(value), nullptr);
 		return value;
@@ -54,11 +59,15 @@ public:
 
 	void Patch(std::string_view name, uintptr_t startaddress, const std::vector<BYTE>& instructions);
 
-	void Restore(std::string name);
+	void Restore(std::string_view name);
 
 	void Freeze();
 
 	void Unfreeze();
+
+	bool Reload();
+
+	bool StillValid();
 
 	DWORD GetProcId();
 

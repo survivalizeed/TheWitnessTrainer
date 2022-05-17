@@ -1,6 +1,19 @@
 #include "Trainer.h"
 
 
+void Trainer::StartCheckThread()
+{
+	auto checkValidation = [&]() {
+		for (;;) {
+			if (GetProcessID() == 0) procValid = false;
+			else procValid = true;
+			Sleep(500);
+		}
+	};
+	std::thread async(checkValidation);
+	async.detach();
+}
+
 void Trainer::AddEntry(std::string_view name, uintptr_t dynamicBaseOffset, const std::vector<unsigned int>& offsets, uintptr_t endoffset)
 {
 	uintptr_t addr = modBase + dynamicBaseOffset;
@@ -12,11 +25,12 @@ void Trainer::AddEntry(std::string_view name, uintptr_t dynamicBaseOffset, const
 	entrys[name] = addr + endoffset;
 }
 
-bool Trainer::IdleWait(std::string_view searchmessage, std::string_view foundmessage)
+bool Trainer::IdleWait(std::string_view searchmessage, std::string_view foundmessage, std::function<void()> callback)
 {
 	std::cout << searchmessage << "\n";
 	for (;;) {
 		procId = GetProcessID();
+		callback();
 		if (procId != 0) {
 			std::cout << foundmessage << "\n";
 			hProcess = OpenProcess(PROCESS_ALL_ACCESS, NULL, procId);
@@ -47,9 +61,11 @@ void Trainer::Patch(std::string_view name, uintptr_t startaddress, const std::ve
 	WriteAddress(startaddress - (instructions.size()), instructions);
 }
 
-void Trainer::Restore(std::string name)
+void Trainer::Restore(std::string_view name)
 {
-	if (stores[name].first == 0 || stores[name].second.size() == 0) return;
+	if (stores.find(name) == stores.end()) 
+		return;
+	std::wcout << stores[name].first << " " << stores[name].second[0];
 	WriteAddress(stores[name].first, stores[name].second);
 }
 
@@ -61,6 +77,19 @@ void Trainer::Freeze()
 void Trainer::Unfreeze()
 {
 	DebugActiveProcessStop(procId);
+}
+
+bool Trainer::Reload()
+{
+	procId = GetProcessID();
+	modBase = GetModuleBaseAddress();
+	hProcess = OpenProcess(PROCESS_ALL_ACCESS, NULL, procId);
+	return procId == 0 ? false : true;
+}
+
+bool Trainer::StillValid()
+{
+	return procValid;
 }
 
 DWORD Trainer::GetProcId()

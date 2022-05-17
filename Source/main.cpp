@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <io.h>
 #include <fstream>
+#include <algorithm>
 
 #include "Trainer.h"
 #include "SimpleConfigReader.h"
@@ -20,7 +21,10 @@ GetAsyncKeyState(key) & 0x8000
 void fnDialog(const std::vector<std::pair<std::wstring, bool>>& entrys) {
 	system("CLS");
 	static_cast<void>(_setmode(_fileno(stdout), _O_U16TEXT));
-	std::wstring begin = L" \u2591\u2591\u2592\u2592\u2593\u2588\u2588\u2588\u2588\u2588";
+	RECT r;
+	GetWindowRect(GetConsoleWindow(), &r);
+	MoveWindow(GetConsoleWindow(), r.left, r.top, 617, 119 + 16 * static_cast<int>(entrys.size()), TRUE);
+	std::wstring begin = L"\u2591\u2591\u2592\u2592\u2593\u2588\u2588\u2588\u2588\u2588";
 	std::wstring end = L"\u2588\u2588\u2588\u2588\u2588\u2593\u2592\u2592\u2591\u2591";
 	std::wstring buf;
 	buf += L"        " + begin;
@@ -47,7 +51,7 @@ void fnDialog(const std::vector<std::pair<std::wstring, bool>>& entrys) {
 	buf += end + L"\n";
 	buf += L"        " + begin;
 	for (int i = 0; i < 36; ++i) buf += L"\u2588";
-	buf += end + L"\n";
+	buf += end;
 	std::wcout << buf;
 }
 
@@ -84,19 +88,47 @@ void fnFly(std::shared_ptr<Trainer> witness, bool active) {
 	}
 }
 
+void RestoreAll(std::shared_ptr<Trainer> witness) {
+	for (int i = 1; i <= 6; ++i) {
+		witness->Restore("XP" + std::to_string(i));
+	}
+	for (int i = 1; i <= 11; ++i) {
+		witness->Restore("YP" + std::to_string(i));
+	}
+	witness->Restore("MuteGame");
+	witness->Restore("LeaveSolveEnviroment");
+	witness->WriteAddress(0x1400BF552, { 0x88, 0x45, 0x0F, 0x84, 0xC0, 0x74, 0x6E });
+	witness->WriteAddress(0x14022ECFA, { 0xE8, 0x91, 0xC1, 0xE8, 0xFF });
+	witness->WriteAddress(0x140064C09, { 0xE8, 0x42, 0x17, 0x00, 0x00 });
+	witness->Restore("NoNodLimit");
+}
+
 int main() {
 	RECT r;
 	GetWindowRect(GetConsoleWindow(), &r);
-	MoveWindow(GetConsoleWindow(), r.left, r.top, 635, 300, TRUE);
-
-	std::cout << "To Navigate back to the menu, press backspace\n";
+	MoveWindow(GetConsoleWindow(), r.left, r.top, 617, 119, TRUE);
+	SetWindowTextA(GetConsoleWindow(), "Searching for witness64_d3d11.exe .");
+	SetWindowPos(GetConsoleWindow(), HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+	SetLayeredWindowAttributes(GetConsoleWindow(), NULL, 255, LWA_ALPHA);
+	ShowWindow(GetConsoleWindow(), SW_SHOW);
+	std::cout << "To Navigate back to the menu, press backspace\nTo Hide/Show the window, press Numpad Asterisk\n";
 	std::shared_ptr<Trainer> witness = std::make_shared<Trainer>("witness64_d3d11.exe");
-	witness->IdleWait("You have to be ingame before you open the trainer!\nSearching for witness64_d3d11.exe ...", "Found witness64_d3d11.exe");
+	witness->IdleWait("You have to be ingame before you open the trainer!\nSearching for witness64_d3d11.exe ...", "Found witness64_d3d11.exe", []() {
+		char* text = new char[MAX_PATH];
+		int size = GetWindowTextA(GetConsoleWindow(), text, MAX_PATH);
+		std::string str(text, size);
+		SetWindowTextA(GetConsoleWindow(), (str + ".").c_str());
+		delete[] text;
+		if(std::count(str.begin(), str.end(), '.') >= 86) SetWindowTextA(GetConsoleWindow(), "Searching for witness64_d3d11.exe .");
+	});
+	witness->StartCheckThread();
+	SetWindowTextA(GetConsoleWindow(), "-survivalizeed's-The-Witness-Trainer-");
+
 	std::ifstream checkEmpty("C:\\Users\\Public\\Documents\\sTWTsettings.conf");
 	std::ofstream settings;
 	if (!checkEmpty.good()) {
 		settings.open("C:\\Users\\Public\\Documents\\sTWTsettings.conf", std::ios::out);
-		settings << "FlySpeed=25;\nSprintSpeed=25;\nPlayTune=1;";
+		settings << "FlySpeed=25;\nSprintSpeed=25;\nPlayTune=1;\nAlphaStickToProcess=100;";
 		settings.close();
 	}
 	checkEmpty.close();
@@ -107,7 +139,8 @@ int main() {
 	{{L"Numpad-0------------GameChanger", false},
 	{L"Numpad-1--------------------Fun", false},
 	{L"Numpad-2-------------------Misc", false},
-	{L"Numpad-3-------------------Tune", false} };
+	{L"Numpad-3-------------------Tune", false},
+	{L"Numpad-4-------------------Quit", false}};
 	
 	std::vector<std::pair<std::wstring, bool>> gamechanger =
 	{{L"Numpad-0--------------------Fly", false},
@@ -127,7 +160,8 @@ int main() {
 	{L"Numpad-2------OpenGameDirectory", false },
 	{L"Numpad-3-----------OpenSettings", false },
 	{L"Numpad-4---------ReloadSettings", false },
-	{L"Numpad-5---------------MuteGame", false } };
+	{L"Numpad-5---------------MuteGame", false },
+	{L"Numpad-6---------StickToProcess", false }};
 	
 	bool tune = false;
 	waveOutSetVolume(NULL, 0xAAAAAAAA);
@@ -148,14 +182,18 @@ int main() {
 	witness->AddEntry("UpDownRotPitch", 0x006303C0, {}, 0);
 	witness->AddEntry("LeftRightRotYaw", 0x006303BC, {}, 0);
 	
-	bool fly, nosave, nosavemessage, nonodlimit, fastersprint, allsolutionswork, leavesolve, leavesolveenviroment, mutegame;
-	fly = nosave = nosavemessage = nonodlimit = fastersprint = allsolutionswork = leavesolve = leavesolveenviroment = mutegame = false;
+	bool fly, nosave, nosavemessage, nonodlimit, fastersprint, allsolutionswork, leavesolve, leavesolveenviroment, mutegame, sticktoprocess, hide;
+	fly = nosave = nosavemessage = nonodlimit = fastersprint = allsolutionswork = leavesolve = leavesolveenviroment = mutegame = sticktoprocess = hide = false;
 
 	bool menuAc = true, gamechangerAc, funAc, miscAc;
 	gamechangerAc = funAc = miscAc = false;
 
 	float x{}, y{}, z{};
-	for (;;) {	
+
+	POINT windowPos{};
+
+	while (witness->StillValid()) {		
+
 		if (input(VK_BACK)) {
 			cDialog = &menu;
 			fnDialog(*cDialog);
@@ -262,7 +300,8 @@ int main() {
 				DWORD size = MAX_PATH;
 				char* filename = new char[MAX_PATH];
 				QueryFullProcessImageNameA(witness->GetProcHandle(), 0, filename, &size);
-				system(("explorer " + std::string(filename)).substr(0, ("explorer " + std::string(filename)).find_last_of("\\/")).c_str());
+				std::thread t1(system, (("explorer " + std::string(filename)).substr(0, ("explorer " + std::string(filename)).find_last_of("\\/"))).c_str());
+				t1.detach();
 				Sleep(200);
 			}
 		}
@@ -292,11 +331,17 @@ int main() {
 				Sleep(200);
 			}
 			if (miscAc) {
-				system("notepad C:\\Users\\Public\\Documents\\sTWTsettings.conf");
+				std::thread t1(system, "notepad C:\\Users\\Public\\Documents\\sTWTsettings.conf");
+				t1.detach();
 				Sleep(200);
 			}
 		}
 		if (input(VK_NUMPAD4)) {
+			if (menuAc) {
+				RestoreAll(witness);
+				CloseWindow(GetConsoleWindow());
+				return 0;
+			}
 			if (gamechangerAc) {
 				leavesolveenviroment = !leavesolveenviroment;
 				if (leavesolveenviroment) 
@@ -333,6 +378,52 @@ int main() {
 				witness->Write("YPos", y);
 				witness->Write("ZPos", z);
 				Sleep(200);
+			}
+			if (miscAc) {
+				sticktoprocess = !sticktoprocess;
+				if (sticktoprocess) {	
+					RECT r;
+					GetWindowRect(GetConsoleWindow(), &r);
+					windowPos.x = r.left;
+					windowPos.y = r.top;
+					SetWindowTextA(GetConsoleWindow(), "");
+					auto alpha = reader.GetEntry("AlphaStickToProcess");
+					if(alpha == std::nullopt)
+						MessageBoxA(NULL, "AlphaStickToProcess no value", "Error", MB_ICONERROR);
+					SetLayeredWindowAttributes(GetConsoleWindow(), NULL, std::stoi(alpha.value()), LWA_ALPHA);
+				}
+				else {
+					SetWindowTextA(GetConsoleWindow(), "-survivalizeed's-The-Witness-Trainer-");
+					SetWindowPos(GetConsoleWindow(), HWND_NOTOPMOST, windowPos.x, windowPos.y, 0, 0, SWP_NOSIZE);
+					SetLayeredWindowAttributes(GetConsoleWindow(), NULL, 255, LWA_ALPHA);
+					ShowWindow(GetConsoleWindow(), SW_SHOW);
+				}
+				misc[6].second = sticktoprocess;
+				fnDialog(*cDialog);
+				Sleep(200);
+			}
+		}
+		if (input(VK_MULTIPLY)) {
+			hide = !hide;
+			if (hide)
+				ShowWindow(GetConsoleWindow(), SW_HIDE);
+			else
+				ShowWindow(GetConsoleWindow(), SW_SHOW);
+			Sleep(200);
+		}
+		if (sticktoprocess) {
+			if (GetConsoleWindow() == GetForegroundWindow()) {
+				SetForegroundWindow(FindWindowA(NULL, "The Witness"));
+			}
+			RECT r;
+			HWND hwndWitness = FindWindowA(NULL, "The Witness");
+			GetWindowRect(hwndWitness, &r);
+			if (hwndWitness != GetForegroundWindow()) {
+				ShowWindow(GetConsoleWindow(), SW_HIDE);
+			}
+			else if(!hide) {
+				ShowWindow(GetConsoleWindow(), SW_RESTORE);
+				SetWindowPos(GetConsoleWindow(), HWND_TOPMOST, r.left, r.top, 0, 0, SWP_NOSIZE);
 			}
 		}
 		if (input(VK_LSHIFT) && fastersprint) {
