@@ -65,7 +65,6 @@ void Trainer::Restore(std::string_view name)
 {
 	if (stores.find(name) == stores.end()) 
 		return;
-	std::wcout << stores[name].first << " " << stores[name].second[0];
 	WriteAddress(stores[name].first, stores[name].second);
 }
 

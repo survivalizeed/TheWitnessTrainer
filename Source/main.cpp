@@ -18,9 +18,26 @@ std::cout << x << "\n"
 #define input(key)\
 GetAsyncKeyState(key) & 0x8000
 
+bool lightDialog = false;
+
 void fnDialog(const std::vector<std::pair<std::wstring, bool>>& entrys) {
 	system("CLS");
 	static_cast<void>(_setmode(_fileno(stdout), _O_U16TEXT));
+	if (lightDialog) {
+		RECT r;
+		GetWindowRect(GetConsoleWindow(), &r);
+		MoveWindow(GetConsoleWindow(), r.left, r.top, 329, 39 + 16 * static_cast<int>(entrys.size()), TRUE);
+		std::wstring buf;
+		for (auto& iter : entrys) {
+			buf += iter.first;
+			if (iter.second)
+				buf += L"   \u2588\u2588\u2588";
+			buf += L'\n';
+		}
+		buf.erase(buf.size() - 1);
+		std::wcout << buf;
+		return;
+	}
 	RECT r;
 	GetWindowRect(GetConsoleWindow(), &r);
 	MoveWindow(GetConsoleWindow(), r.left, r.top, 617, 119 + 16 * static_cast<int>(entrys.size()), TRUE);
@@ -193,214 +210,216 @@ int main() {
 	POINT windowPos{};
 
 	while (witness->StillValid()) {		
-
-		if (input(VK_BACK)) {
-			cDialog = &menu;
-			fnDialog(*cDialog);
-			menuAc = true;
-			gamechangerAc = false;
-			funAc = false;
-			miscAc = false;
-			Sleep(200);
-		}
-		if (input(VK_NUMPAD0)) {
-			if (menuAc) {
-				cDialog = &gamechanger;
+		if (!hide) {
+			if (input(VK_BACK)) {
+				cDialog = &menu;
 				fnDialog(*cDialog);
-				gamechangerAc = true;
-				menuAc = false;
+				menuAc = true;
+				gamechangerAc = false;
 				funAc = false;
 				miscAc = false;
 				Sleep(200);
 			}
-			else if (gamechangerAc) {
-				witness->Freeze();
-				fly = !fly;
-				fnFly(witness, fly);
-				witness->Unfreeze();
-				gamechanger[0].second = fly;
-				fnDialog(*cDialog);
-				Sleep(200);
-			}
-			else if (funAc) {
-				nonodlimit = !nonodlimit;
-				if (nonodlimit) witness->Patch("NoNodLimit", 0x14023CCA2, { 0x90,0x90,0x90,0x90 });
-				else witness->Restore("NoNodLimit");
-				fun[0].second = nonodlimit;
-				fnDialog(*cDialog);
-				Sleep(200);
-			}
-			else if (miscAc) {
-				nosave = !nosave;
-				if (nosave) witness->Patch("DisableSave", 0x140064C09, { 0x90, 0x90, 0x90, 0x90, 0x90 });
-				else {
-					witness->WriteAddress(0x140064C09, { 0xE8, 0x42, 0x17, 0x00, 0x00 });
-					misc[1].second = false;
-					nosavemessage = false;
+			if (input(VK_NUMPAD0)) {
+				if (menuAc) {
+					cDialog = &gamechanger;
+					fnDialog(*cDialog);
+					gamechangerAc = true;
+					menuAc = false;
+					funAc = false;
+					miscAc = false;
+					Sleep(200);
 				}
-				misc[0].second = nosave;
-				fnDialog(*cDialog);
-				Sleep(200);
-			}
-		}
-		if (input(VK_NUMPAD1)) {
-			if (menuAc) {
-				cDialog = &fun;
-				fnDialog(*cDialog);
-				funAc = true;
-				menuAc = false;
-				gamechangerAc = false;
-				miscAc = false;
-				Sleep(200);
-			}
-			else if (gamechangerAc) {
-				fastersprint = !fastersprint;
-				gamechanger[1].second = fastersprint;
-				fnDialog(*cDialog);
-				Sleep(200);
-			}
-			else if (miscAc) {
-				nosavemessage = !nosavemessage;
-				if (nosavemessage) witness->Patch("DisableSaveNoMessage", 0x140064C09, { 0xB8, 0x01, 0x00, 0x00, 0x00 });
-				else {
-					witness->WriteAddress(0x140064C09, { 0xE8, 0x42, 0x17, 0x00, 0x00 });
-					misc[0].second = false;
-					nosave = false;
+				else if (gamechangerAc) {
+					witness->Freeze();
+					fly = !fly;
+					fnFly(witness, fly);
+					witness->Unfreeze();
+					gamechanger[0].second = fly;
+					fnDialog(*cDialog);
+					Sleep(200);
 				}
-				misc[1].second = nosavemessage;
-				fnDialog(*cDialog);
-				Sleep(200);
+				else if (funAc) {
+					nonodlimit = !nonodlimit;
+					if (nonodlimit) witness->Patch("NoNodLimit", 0x14023CCA2, { 0x90,0x90,0x90,0x90 });
+					else witness->Restore("NoNodLimit");
+					fun[0].second = nonodlimit;
+					fnDialog(*cDialog);
+					Sleep(200);
+				}
+				else if (miscAc) {
+					nosave = !nosave;
+					if (nosave) witness->Patch("DisableSave", 0x140064C09, { 0x90, 0x90, 0x90, 0x90, 0x90 });
+					else {
+						witness->WriteAddress(0x140064C09, { 0xE8, 0x42, 0x17, 0x00, 0x00 });
+						misc[1].second = false;
+						nosavemessage = false;
+					}
+					misc[0].second = nosave;
+					fnDialog(*cDialog);
+					Sleep(200);
+				}
 			}
+			if (input(VK_NUMPAD1)) {
+				if (menuAc) {
+					cDialog = &fun;
+					fnDialog(*cDialog);
+					funAc = true;
+					menuAc = false;
+					gamechangerAc = false;
+					miscAc = false;
+					Sleep(200);
+				}
+				else if (gamechangerAc) {
+					fastersprint = !fastersprint;
+					gamechanger[1].second = fastersprint;
+					fnDialog(*cDialog);
+					Sleep(200);
+				}
+				else if (miscAc) {
+					nosavemessage = !nosavemessage;
+					if (nosavemessage) witness->Patch("DisableSaveNoMessage", 0x140064C09, { 0xB8, 0x01, 0x00, 0x00, 0x00 });
+					else {
+						witness->WriteAddress(0x140064C09, { 0xE8, 0x42, 0x17, 0x00, 0x00 });
+						misc[0].second = false;
+						nosave = false;
+					}
+					misc[1].second = nosavemessage;
+					fnDialog(*cDialog);
+					Sleep(200);
+				}
 
-		}
-		if (input(VK_NUMPAD2)) {
-			if (menuAc) {
-				cDialog = &misc;
-				fnDialog(*cDialog);
-				miscAc = true;
-				menuAc = false;
-				gamechangerAc = false;
-				funAc = false;
-				Sleep(200);
 			}
-			else if (gamechangerAc) {
-				allsolutionswork = !allsolutionswork;
-				if (allsolutionswork) witness->WriteAddress(0x1400BF552, { 0xC6, 0x45, 0x0F, 0x01, 0xB0, 0x01, 0x90 });
-				else {
-					witness->WriteAddress(0x1400BF552, { 0x88, 0x45, 0x0F, 0x84, 0xC0, 0x74, 0x6E});
-					witness->WriteAddress(0x14022ECFA, { 0xE8, 0x91, 0xC1, 0xE8, 0xFF });
-					gamechanger[3].second = false;
-					leavesolve = false;
+			if (input(VK_NUMPAD2)) {
+				if (menuAc) {
+					cDialog = &misc;
+					fnDialog(*cDialog);
+					miscAc = true;
+					menuAc = false;
+					gamechangerAc = false;
+					funAc = false;
+					Sleep(200);
 				}
-				gamechanger[2].second = allsolutionswork;
-				fnDialog(*cDialog);
-				Sleep(200); 
-			}
-			else if (miscAc) {
-				DWORD size = MAX_PATH;
-				char* filename = new char[MAX_PATH];
-				QueryFullProcessImageNameA(witness->GetProcHandle(), 0, filename, &size);
-				std::thread t1(system, (("explorer " + std::string(filename)).substr(0, ("explorer " + std::string(filename)).find_last_of("\\/"))).c_str());
-				t1.detach();
-				Sleep(200);
-			}
-		}
-		if (input(VK_NUMPAD3)) {
-			if (menuAc) {
-				if (tune) PlaySound(NULL, NULL, SND_ASYNC);
-				else PlaySound(MAKEINTRESOURCE(101), GetModuleHandle(NULL), SND_RESOURCE | SND_LOOP | SND_ASYNC);
-				tune = !tune;
-				menu[3].second = tune;
-				fnDialog(*cDialog);
-				Sleep(200);
-			}
-			if (gamechangerAc) {
-				leavesolve = !leavesolve;
-				if (leavesolve) {
-					witness->WriteAddress(0x1400BF552, { 0xC6, 0x45, 0x0F, 0x01, 0xB0, 0x01, 0x90 });
-					witness->WriteAddress(0x14022ECFA, { 0xE8, 0x31, 0x06, 0xE9, 0xFF });
+				else if (gamechangerAc) {
+					allsolutionswork = !allsolutionswork;
+					if (allsolutionswork) witness->WriteAddress(0x1400BF552, { 0xC6, 0x45, 0x0F, 0x01, 0xB0, 0x01, 0x90 });
+					else {
+						witness->WriteAddress(0x1400BF552, { 0x88, 0x45, 0x0F, 0x84, 0xC0, 0x74, 0x6E });
+						witness->WriteAddress(0x14022ECFA, { 0xE8, 0x91, 0xC1, 0xE8, 0xFF });
+						gamechanger[3].second = false;
+						leavesolve = false;
+					}
+					gamechanger[2].second = allsolutionswork;
+					fnDialog(*cDialog);
+					Sleep(200);
 				}
-				else {
-					witness->WriteAddress(0x1400BF552, { 0x88, 0x45, 0x0F, 0x84, 0xC0, 0x74, 0x6E });
-					witness->WriteAddress(0x14022ECFA, { 0xE8, 0x91, 0xC1, 0xE8, 0xFF });
-					gamechanger[2].second = false;
-					allsolutionswork = false;
+				else if (miscAc) {
+					DWORD size = MAX_PATH;
+					char* filename = new char[MAX_PATH];
+					QueryFullProcessImageNameA(witness->GetProcHandle(), 0, filename, &size);
+					std::thread t1(system, (("explorer " + std::string(filename)).substr(0, ("explorer " + std::string(filename)).find_last_of("\\/"))).c_str());
+					t1.detach();
+					Sleep(200);
 				}
-				gamechanger[3].second = leavesolve;
-				fnDialog(*cDialog);
-				Sleep(200);
 			}
-			if (miscAc) {
-				std::thread t1(system, "notepad C:\\Users\\Public\\Documents\\sTWTsettings.conf");
-				t1.detach();
-				Sleep(200);
-			}
-		}
-		if (input(VK_NUMPAD4)) {
-			if (menuAc) {
-				RestoreAll(witness);
-				CloseWindow(GetConsoleWindow());
-				return 0;
-			}
-			if (gamechangerAc) {
-				leavesolveenviroment = !leavesolveenviroment;
-				if (leavesolveenviroment) 
-					witness->Patch("LeaveSolveEnviroment", 0x14022DCFF, { 0xC7, 0x87, 0xB8, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x41, 0xB4, 0x01 });
-				else witness->Restore("LeaveSolveEnviroment");
-				gamechanger[4].second = leavesolveenviroment;
-				fnDialog(*cDialog);
-				Sleep(200);
-			}
-			if (miscAc) {
-				reader.Reload();
-				Sleep(200);
-			}
-		}
-		if (input(VK_NUMPAD5)) {
-			if (gamechangerAc) {
-				x = witness->Read<float>("XPos");
-				y = witness->Read<float>("YPos");
-				z = witness->Read<float>("ZPos");
-				Sleep(200);
-			}
-			if (miscAc) {
-				mutegame = !mutegame;
-				if (mutegame) witness->Patch("MuteGame", 0x1402A94B0, { 0xC3, 0x90, 0x90 });
-				else witness->Restore("MuteGame");
-				misc[5].second = mutegame;
-				fnDialog(*cDialog);
-				Sleep(200);
-			}
-		}
-		if (input(VK_NUMPAD6)) {
-			if (gamechangerAc) {
-				witness->Write("XPos", x);
-				witness->Write("YPos", y);
-				witness->Write("ZPos", z);
-				Sleep(200);
-			}
-			if (miscAc) {
-				sticktoprocess = !sticktoprocess;
-				if (sticktoprocess) {	
-					RECT r;
-					GetWindowRect(GetConsoleWindow(), &r);
-					windowPos.x = r.left;
-					windowPos.y = r.top;
-					SetWindowTextA(GetConsoleWindow(), "");
-					auto alpha = reader.GetEntry("AlphaStickToProcess");
-					if(alpha == std::nullopt)
-						MessageBoxA(NULL, "AlphaStickToProcess no value", "Error", MB_ICONERROR);
-					SetLayeredWindowAttributes(GetConsoleWindow(), NULL, std::stoi(alpha.value()), LWA_ALPHA);
+			if (input(VK_NUMPAD3)) {
+				if (menuAc) {
+					if (tune) PlaySound(NULL, NULL, SND_ASYNC);
+					else PlaySound(MAKEINTRESOURCE(101), GetModuleHandle(NULL), SND_RESOURCE | SND_LOOP | SND_ASYNC);
+					tune = !tune;
+					menu[3].second = tune;
+					fnDialog(*cDialog);
+					Sleep(200);
 				}
-				else {
-					SetWindowTextA(GetConsoleWindow(), "-survivalizeed's-The-Witness-Trainer-");
-					SetWindowPos(GetConsoleWindow(), HWND_NOTOPMOST, windowPos.x, windowPos.y, 0, 0, SWP_NOSIZE);
-					SetLayeredWindowAttributes(GetConsoleWindow(), NULL, 255, LWA_ALPHA);
-					ShowWindow(GetConsoleWindow(), SW_SHOW);
+				if (gamechangerAc) {
+					leavesolve = !leavesolve;
+					if (leavesolve) {
+						witness->WriteAddress(0x1400BF552, { 0xC6, 0x45, 0x0F, 0x01, 0xB0, 0x01, 0x90 });
+						witness->WriteAddress(0x14022ECFA, { 0xE8, 0x31, 0x06, 0xE9, 0xFF });
+					}
+					else {
+						witness->WriteAddress(0x1400BF552, { 0x88, 0x45, 0x0F, 0x84, 0xC0, 0x74, 0x6E });
+						witness->WriteAddress(0x14022ECFA, { 0xE8, 0x91, 0xC1, 0xE8, 0xFF });
+						gamechanger[2].second = false;
+						allsolutionswork = false;
+					}
+					gamechanger[3].second = leavesolve;
+					fnDialog(*cDialog);
+					Sleep(200);
 				}
-				misc[6].second = sticktoprocess;
-				fnDialog(*cDialog);
-				Sleep(200);
+				if (miscAc) {
+					std::thread t1(system, "notepad C:\\Users\\Public\\Documents\\sTWTsettings.conf");
+					t1.detach();
+					Sleep(200);
+				}
+			}
+			if (input(VK_NUMPAD4)) {
+				if (menuAc) {
+					RestoreAll(witness);
+					CloseWindow(GetConsoleWindow());
+					return 0;
+				}
+				if (gamechangerAc) {
+					leavesolveenviroment = !leavesolveenviroment;
+					if (leavesolveenviroment)
+						witness->Patch("LeaveSolveEnviroment", 0x14022DCFF, { 0xC7, 0x87, 0xB8, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x41, 0xB4, 0x01 });
+					else witness->Restore("LeaveSolveEnviroment");
+					gamechanger[4].second = leavesolveenviroment;
+					fnDialog(*cDialog);
+					Sleep(200);
+				}
+				if (miscAc) {
+					reader.Reload();
+					Sleep(200);
+				}
+			}
+			if (input(VK_NUMPAD5)) {
+				if (gamechangerAc) {
+					x = witness->Read<float>("XPos");
+					y = witness->Read<float>("YPos");
+					z = witness->Read<float>("ZPos");
+					Sleep(200);
+				}
+				if (miscAc) {
+					mutegame = !mutegame;
+					if (mutegame) witness->Patch("MuteGame", 0x1402A94B0, { 0xC3, 0x90, 0x90 });
+					else witness->Restore("MuteGame");
+					misc[5].second = mutegame;
+					fnDialog(*cDialog);
+					Sleep(200);
+				}
+			}
+			if (input(VK_NUMPAD6)) {
+				if (gamechangerAc) {
+					witness->Write("XPos", x);
+					witness->Write("YPos", y);
+					witness->Write("ZPos", z);
+					Sleep(200);
+				}
+				if (miscAc) {
+					lightDialog = !lightDialog;
+					sticktoprocess = !sticktoprocess;
+					if (sticktoprocess) {
+						RECT r;
+						GetWindowRect(GetConsoleWindow(), &r);
+						windowPos.x = r.left;
+						windowPos.y = r.top;
+						SetWindowTextA(GetConsoleWindow(), "");
+						auto alpha = reader.GetEntry("AlphaStickToProcess");
+						if (alpha == std::nullopt)
+							MessageBoxA(NULL, "AlphaStickToProcess no value", "Error", MB_ICONERROR);
+						SetLayeredWindowAttributes(GetConsoleWindow(), NULL, std::stoi(alpha.value()), LWA_ALPHA);
+					}
+					else {
+						SetWindowTextA(GetConsoleWindow(), "-survivalizeed's-The-Witness-Trainer-");
+						SetWindowPos(GetConsoleWindow(), HWND_NOTOPMOST, windowPos.x, windowPos.y, 0, 0, SWP_NOSIZE);
+						SetLayeredWindowAttributes(GetConsoleWindow(), NULL, 255, LWA_ALPHA);
+						ShowWindow(GetConsoleWindow(), SW_SHOW);
+					}
+					misc[6].second = sticktoprocess;
+					fnDialog(*cDialog);
+					Sleep(200);
+				}
 			}
 		}
 		if (input(VK_MULTIPLY)) {
