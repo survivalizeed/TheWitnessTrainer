@@ -10,7 +10,6 @@
 #include "Trainer.h"
 #include "SimpleConfigReader.h"
 #include "../resource.h"
-#include "Dialog.h"
 
 #pragma comment(lib, "winmm.lib")
 #define log(x)\
