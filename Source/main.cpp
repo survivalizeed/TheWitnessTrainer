@@ -7,10 +7,10 @@
 #include <io.h>
 #include <fstream>
 #include <algorithm>
-
 #include "Trainer.h"
 #include "SimpleConfigReader.h"
 #include "../resource.h"
+#include "Dialog.h"
 
 #pragma comment(lib, "winmm.lib")
 #define log(x)\
@@ -105,7 +105,7 @@ void fnFly(std::shared_ptr<Trainer> witness, bool active) {
 	}
 }
 
-void RestoreAll(std::shared_ptr<Trainer> witness) {
+void fnRestoreAll(std::shared_ptr<Trainer> witness) {
 	for (int i = 1; i <= 6; ++i) {
 		witness->Restore("XP" + std::to_string(i));
 	}
@@ -118,6 +118,25 @@ void RestoreAll(std::shared_ptr<Trainer> witness) {
 	witness->WriteAddress(0x14022ECFA, { 0xE8, 0x91, 0xC1, 0xE8, 0xFF });
 	witness->WriteAddress(0x140064C09, { 0xE8, 0x42, 0x17, 0x00, 0x00 });
 	witness->Restore("NoNodLimit");
+}
+
+void fnStickToProcess(bool& state, bool& hide) {
+	while (state) {
+		if (GetConsoleWindow() == GetForegroundWindow()) {
+			SetForegroundWindow(FindWindowA(NULL, "The Witness"));
+		}
+		RECT r;
+		HWND hwndWitness = FindWindowA(NULL, "The Witness");
+		GetWindowRect(hwndWitness, &r);
+		if (hwndWitness != GetForegroundWindow()) {
+			ShowWindow(GetConsoleWindow(), SW_HIDE);
+		}
+		else if (!hide) {
+			ShowWindow(GetConsoleWindow(), SW_RESTORE);
+			SetWindowPos(GetConsoleWindow(), HWND_TOPMOST, r.left, r.top, 0, 0, SWP_NOSIZE);
+		}
+		Sleep(1);
+	}
 }
 
 int main() {
@@ -355,7 +374,7 @@ int main() {
 			}
 			if (input(VK_NUMPAD4)) {
 				if (menuAc) {
-					RestoreAll(witness);
+					fnRestoreAll(witness);
 					CloseWindow(GetConsoleWindow());
 					return 0;
 				}
@@ -409,6 +428,8 @@ int main() {
 						if (alpha == std::nullopt)
 							MessageBoxA(NULL, "AlphaStickToProcess no value", "Error", MB_ICONERROR);
 						SetLayeredWindowAttributes(GetConsoleWindow(), NULL, std::stoi(alpha.value()), LWA_ALPHA);
+						std::thread t1(fnStickToProcess, std::ref(sticktoprocess), std::ref(hide));
+						t1.detach();
 					}
 					else {
 						SetWindowTextA(GetConsoleWindow(), "-survivalizeed's-The-Witness-Trainer-");
@@ -429,21 +450,6 @@ int main() {
 			else
 				ShowWindow(GetConsoleWindow(), SW_SHOW);
 			Sleep(200);
-		}
-		if (sticktoprocess) {
-			if (GetConsoleWindow() == GetForegroundWindow()) {
-				SetForegroundWindow(FindWindowA(NULL, "The Witness"));
-			}
-			RECT r;
-			HWND hwndWitness = FindWindowA(NULL, "The Witness");
-			GetWindowRect(hwndWitness, &r);
-			if (hwndWitness != GetForegroundWindow()) {
-				ShowWindow(GetConsoleWindow(), SW_HIDE);
-			}
-			else if(!hide) {
-				ShowWindow(GetConsoleWindow(), SW_RESTORE);
-				SetWindowPos(GetConsoleWindow(), HWND_TOPMOST, r.left, r.top, 0, 0, SWP_NOSIZE);
-			}
 		}
 		if (input(VK_LSHIFT) && fastersprint) {
 			auto speed = reader.GetEntry("SprintSpeed");
