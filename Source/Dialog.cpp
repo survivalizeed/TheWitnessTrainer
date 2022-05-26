@@ -50,7 +50,8 @@ void Dialog::PopDialog()
 			history.pop();
 		history.push(rootDialog);
 	}
-	history.pop();
+	else
+		history.pop();
 	DisplayDialog();
 }
 

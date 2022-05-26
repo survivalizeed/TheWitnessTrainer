@@ -92,7 +92,10 @@ int main() {
 	dialog.Set("misc",	"muteGame",				{ L"Numpad-5--------------------Mute-Game", false });
 	dialog.Set("misc",	"stickToProcess",		{ L"Numpad-6-------------Stick-To-Process", false });
 	
-	dialog.Set("teleports", "tutorial", { L"Numpad-0---------------------Tutorial", false });
+	dialog.Set("teleports", "tutorial",		{ L"Numpad-0---------------------Tutorial", false });
+	dialog.Set("teleports", "turntable",	{ L"Numpad-1--------------------Turntable", false });
+	dialog.Set("teleports", "top",			{ L"Numpad-2--------------------------Top", false });
+	dialog.Set("teleports", "ruin",			{ L"Numpad-3-------------------------Ruin", false });
 
 	dialog.PushDialog(dialog.GetDialog("menu"));
 
@@ -179,6 +182,11 @@ int main() {
 					}
 					Sleep(200);
 				}
+				else if (dialog.GetDialog("teleports") == dialog.GetCurrentDialog()) {
+					fnRotation(witness, -0.402977f, -0.0448767f);
+					fnTeleport(witness, ini, -31.3635f, -11.7304f, -38.6826f);
+					Sleep(200);
+				}
 
 			}
 			if (input(VK_NUMPAD2)) {
@@ -205,13 +213,17 @@ int main() {
 					t1.detach();
 					Sleep(200);
 				}
+				else if (dialog.GetDialog("teleports") == dialog.GetCurrentDialog()) {
+					fnRotation(witness, -0.182666f, 2.82946f);
+					fnTeleport(witness, ini, -51.6206f, 66.8419f, 144.698f);
+				}
 			}
 			if (input(VK_NUMPAD3)) {
 				if (dialog.GetDialog("menu") == dialog.GetCurrentDialog()) {
 					dialog.PushDialog(dialog.GetDialog("teleports"));
 					Sleep(200);
 				}
-				if (dialog.GetDialog("gameChanger") == dialog.GetCurrentDialog()) {
+				else if (dialog.GetDialog("gameChanger") == dialog.GetCurrentDialog()) {
 					dialog.InvertEntry("gameChanger", "leaveSolve");
 					if (dialog.GetEntry("gameChanger", "leaveSolve")->second) {
 						witness->WriteAddress(0x1400BF552, { 0xC6, 0x45, 0x0F, 0x01, 0xB0, 0x01, 0x90 });
@@ -224,10 +236,14 @@ int main() {
 					}
 					Sleep(200);
 				}
-				if (dialog.GetDialog("misc") == dialog.GetCurrentDialog()) {
+				else if (dialog.GetDialog("misc") == dialog.GetCurrentDialog()) {
 					std::thread t1(system, "notepad C:\\Users\\Public\\Documents\\sTWTsettings.ini");
 					t1.detach();
 					Sleep(200);
+				}
+				else if (dialog.GetDialog("teleports") == dialog.GetCurrentDialog()) {
+					fnRotation(witness, -0.334823f, -1.75872f);
+					fnTeleport(witness, ini, 135.093f, 39.3168f, 54.3465f);
 				}
 			}
 			if (input(VK_NUMPAD4)) {
@@ -239,7 +255,7 @@ int main() {
 					dialog.InvertEntry("menu", "tune");
 					Sleep(200);
 				}
-				if (dialog.GetDialog("gameChanger") == dialog.GetCurrentDialog()) {
+				else if (dialog.GetDialog("gameChanger") == dialog.GetCurrentDialog()) {
 					dialog.InvertEntry("gameChanger", "leaveSolveEnviroment");
 					if (dialog.GetEntry("gameChanger", "leaveSolveEnviroment")->second)
 						witness->Patch("LeaveSolveEnviroment", 0x14022DCFF, { 0xC7, 0x87, 0xB8, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x41, 0xB4, 0x01 });
@@ -247,7 +263,7 @@ int main() {
 						witness->Restore("LeaveSolveEnviroment");
 					Sleep(200);
 				}
-				if (dialog.GetDialog("misc") == dialog.GetCurrentDialog()) {
+				else if (dialog.GetDialog("misc") == dialog.GetCurrentDialog()) {
 					file.read(ini);
 					fnSprintKey(ini, sprintKey);
 					Sleep(200);
@@ -259,13 +275,13 @@ int main() {
 					CloseWindow(_console);
 					return 0;
 				}
-				if (dialog.GetDialog("gameChanger") == dialog.GetCurrentDialog()) {
+				else if (dialog.GetDialog("gameChanger") == dialog.GetCurrentDialog()) {
 					x = witness->Read<float>("XPos");
 					y = witness->Read<float>("YPos");
 					z = witness->Read<float>("ZPos");
 					Sleep(200);
 				}
-				if (dialog.GetDialog("misc") == dialog.GetCurrentDialog()) {
+				else if (dialog.GetDialog("misc") == dialog.GetCurrentDialog()) {
 					dialog.InvertEntry("misc", "muteGame");
 					if (dialog.GetEntry("misc", "muteGame")->second)
 						witness->Patch("MuteGame", 0x1402A94B0, {0xC3, 0x90, 0x90});
@@ -281,7 +297,7 @@ int main() {
 					}
 					Sleep(200);
 				}
-				if (dialog.GetDialog("misc") == dialog.GetCurrentDialog()) {
+				else if (dialog.GetDialog("misc") == dialog.GetCurrentDialog()) {
 					dialog.compactMode = !dialog.compactMode;
 					dialog.InvertEntry("misc", "stickToProcess");
 					if (dialog.GetEntry("misc", "stickToProcess")->second) {
@@ -337,13 +353,14 @@ int main() {
 		if (input('W') && dialog.GetEntry("gameChanger", "fly")->second) {
 			float pitch = witness->Read<float>("UpDownRotPitch");
 			float yaw = witness->Read<float>("LeftRightRotYaw");
-			float yp = witness->Read<float>("YPos");
+			
 			if (ini["movement"]["flySpeed"].empty()) {
 				error("flySpeed no value!");
 			}
 			else {
 				try {
 					float speed = std::stof(ini["movement"]["flySpeed"]);
+					float yp = witness->Read<float>("YPos");
 					witness->Write("YPos", float(yp + (sinf(pitch) * 0.0001 * speed)));
 					float xp = witness->Read<float>("XPos");
 					witness->Write("XPos", float(xp + (sinf(yaw) * 0.0001 * speed)));
@@ -354,6 +371,11 @@ int main() {
 					error("flySpeed illegal value!");
 				}
 			}
+		}
+		if (input(VK_NUMPAD9)) {
+			std::wcout << witness->Read<float>("XPos") << " " << witness->Read<float>("YPos") << " " << witness->Read<float>("ZPos") << "\n";
+			std::wcout << witness->Read<float>("UpDownRotPitch") << " " << witness->Read<float>("LeftRightRotYaw");
+			Sleep(200);
 		}
 	}
 	system("CLS");
