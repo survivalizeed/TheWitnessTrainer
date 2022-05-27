@@ -91,11 +91,13 @@ int main() {
 	dialog.Set("misc",	"reloadSettings",		{ L"Numpad-4--------------Reload-Settings", false });
 	dialog.Set("misc",	"muteGame",				{ L"Numpad-5--------------------Mute-Game", false });
 	dialog.Set("misc",	"stickToProcess",		{ L"Numpad-6-------------Stick-To-Process", false });
-	
+	dialog.Set("misc",  "installHackedSave",	{ L"Numpad-7----------Install-Hacked-Save", false });
+
 	dialog.Set("teleports", "tutorial",		{ L"Numpad-0---------------------Tutorial", false });
 	dialog.Set("teleports", "turntable",	{ L"Numpad-1--------------------Turntable", false });
 	dialog.Set("teleports", "top",			{ L"Numpad-2--------------------------Top", false });
 	dialog.Set("teleports", "ruin",			{ L"Numpad-3-------------------------Ruin", false });
+	dialog.Set("teleports", "end",			{ L"Numpad-4------------------------- End", false });
 
 	dialog.PushDialog(dialog.GetDialog("menu"));
 
@@ -268,6 +270,10 @@ int main() {
 					fnSprintKey(ini, sprintKey);
 					Sleep(200);
 				}
+				else if (dialog.GetDialog("teleports") == dialog.GetCurrentDialog()) {
+					fnRotation(witness, -0.0136076f, -3.01675f);
+					fnTeleport(witness, ini, -49.1121f, - 0.0246615f, 206.573f);
+				}
 			}
 			if (input(VK_NUMPAD5)) {
 				if (dialog.GetDialog("menu") == dialog.GetCurrentDialog()) {
@@ -325,6 +331,18 @@ int main() {
 						SetLayeredWindowAttributes(_console, NULL, 255, LWA_ALPHA);
 						ShowWindow(_console, SW_SHOW);
 					}
+					Sleep(200);
+				}
+			}
+			if (input(VK_NUMPAD7)) {
+				if (dialog.GetDialog("misc") == dialog.GetCurrentDialog()) {
+					char username[256 + 1];
+					DWORD username_len = 256 + 1;
+					GetUserNameA(username, &username_len);
+					fnExportRes(IDR_WCS1, "WCS", 
+						std::string("C:\\Users\\" + std::string(username) + "\\AppData\\Roaming\\The Witness\\TrainerSaveGame.witness_campaign").c_str());
+					fnExportRes(IDB_PNG1, "PNG",
+						std::string("C:\\Users\\" + std::string(username) + "\\AppData\\Roaming\\The Witness\\TrainerSaveGame.png").c_str());
 					Sleep(200);
 				}
 			}

@@ -115,3 +115,20 @@ inline void fnRotation(std::shared_ptr<Trainer> witness, float pitch, float yaw)
 	witness->Write("UpDownRotPitch", pitch);
 	witness->Write("LeftRightRotYaw", yaw);
 }
+
+inline void fnExportRes(int id, const char* type, const char* destination) {
+	HRSRC myResource = FindResourceA(NULL, MAKEINTRESOURCE(id), type);
+	if (myResource == NULL)
+		return;
+	DWORD myResourceSize = SizeofResource(NULL, myResource);
+	HGLOBAL myResourceData = LoadResource(NULL, myResource);
+	if (myResourceData == NULL)
+		return;
+	void* lpResLock = LockResource(myResourceData);
+	if (lpResLock == NULL)
+		return;
+	FILE* fh;
+	fopen_s(&fh, destination, "wb+");
+	fwrite(lpResLock, myResourceSize, 1, fh);
+	fclose(fh);
+}
