@@ -1,8 +1,21 @@
 #pragma once
 
+#pragma warning(disable: 6387)
+#pragma comment(lib, "winmm.lib")
+#define log(x)\
+std::wcout << x << "\n"
+
+#define input(key)\
+GetAsyncKeyState(key) & 0x8000
+
+#define error(msg)\
+MessageBoxA(NULL, msg, "ERROR", MB_ICONERROR);\
+exit(-1)
+
 #include <memory>
 #include "Trainer.h"
 #include "Ini.h"
+#include "Dialog.h"
 
 #define error(msg)\
 MessageBoxA(NULL, msg, "ERROR", MB_ICONERROR);\
@@ -46,6 +59,74 @@ inline void fnFly(std::shared_ptr<Trainer> witness, bool active) {
 	witness->Unfreeze();
 }
 
+inline void fnFlyControls(std::shared_ptr<Trainer> witness, Dialog& dialog, INIStructure& ini) {
+	while (true) {
+		float pitch{}, yaw{}, speed{};
+		bool state = dialog.GetEntry("gameChanger", "fly")->second;
+		if ((input('W') || input('S') || input('A') || input('D')) && state) {
+			pitch = witness->Read<float>("UpDownRotPitch");
+			yaw = witness->Read<float>("LeftRightRotYaw");
+			if (ini["movement"]["flySpeed"].empty()) {
+				error("flySpeed no value!");
+			}
+			try {
+				speed = std::stof(ini["movement"]["flySpeed"]);
+			}
+			catch (...) {
+				error("flySpeed illegal value!");
+			}
+		}
+		if (input('W') && state) {
+			float yp = witness->Read<float>("YPos");
+			witness->Write("YPos", float(yp + (sinf(pitch) * 0.01 * speed)));
+			float xp = witness->Read<float>("XPos");
+			witness->Write("XPos", float(xp + (sinf(yaw) * 0.01 * speed)));
+			float zp = witness->Read<float>("ZPos");
+			witness->Write("ZPos", float(zp + (cosf(yaw) * 0.01 * speed)));
+		}
+		if (input('S') && state) {
+			float yp = witness->Read<float>("YPos");
+			witness->Write("YPos", float(yp - (sinf(pitch) * 0.01 * speed)));
+			float xp = witness->Read<float>("XPos");
+			witness->Write("XPos", float(xp - (sinf(yaw) * 0.01 * speed)));
+			float zp = witness->Read<float>("ZPos");
+			witness->Write("ZPos", float(zp - (cosf(yaw) * 0.01 * speed)));
+		}
+		if (input('A') && state) {
+			float xp = witness->Read<float>("XPos");
+			witness->Write("XPos", float(xp + (sinf(yaw + float(M_PI) / 2) * 0.01 * speed)));
+			float zp = witness->Read<float>("ZPos");
+			witness->Write("ZPos", float(zp + (cosf(yaw + float(M_PI) / 2) * 0.01 * speed)));
+		}
+		if (input('D') && state) {
+			float xp = witness->Read<float>("XPos");
+			witness->Write("XPos", float(xp + (sinf(yaw - float(M_PI) / 2) * 0.01 * speed)));
+			float zp = witness->Read<float>("ZPos");
+			witness->Write("ZPos", float(zp + (cosf(yaw - float(M_PI) / 2) * 0.01 * speed)));
+		}
+		Sleep(1);
+	}
+}
+
+inline void fnSprintControls(std::shared_ptr<Trainer> witness, Dialog& dialog, INIStructure& ini, int& sprintKey) {
+	while (true) {
+		if (input(sprintKey) && dialog.GetEntry("gameChanger", "fasterSprint")->second) {
+			if (ini["movement"]["sprintSpeed"].empty()) {
+				error("sprintSpeed no value!");
+			}
+			else {
+				try {
+					witness->Write<float>("Speed", std::stof(ini["movement"]["sprintSpeed"]));
+				}
+				catch (...) {
+					error("sprintSpeed illegal value!");
+				}
+			}
+		}
+		Sleep(1);
+	}
+}
+
 inline void fnRestoreAll(std::shared_ptr<Trainer> witness) {
 	for (int i = 1; i <= 6; ++i) {
 		witness->Restore("XP" + std::to_string(i));
@@ -61,20 +142,22 @@ inline void fnRestoreAll(std::shared_ptr<Trainer> witness) {
 	witness->Restore("NoNodLimit");
 }
 
-inline void fnStickToProcess(const bool& state, const bool& hide) {
-	while (state) {
-		if (GetConsoleWindow() == GetForegroundWindow()) {
-			SetForegroundWindow(FindWindowA(NULL, "The Witness"));
-		}
-		RECT r;
-		HWND hwndWitness = FindWindowA(NULL, "The Witness");
-		GetWindowRect(hwndWitness, &r);
-		if (hwndWitness != GetForegroundWindow()) {
-			ShowWindow(GetConsoleWindow(), SW_HIDE);
-		}
-		else if (!hide) {
-			ShowWindow(GetConsoleWindow(), SW_RESTORE);
-			SetWindowPos(GetConsoleWindow(), HWND_TOPMOST, r.left, r.top, 0, 0, SWP_NOSIZE);
+inline void fnStickToProcess(Dialog& dialog, bool& hide) {
+	while (true) {
+		if (dialog.GetEntry("misc", "stickToProcess")->second) {
+			if (GetConsoleWindow() == GetForegroundWindow()) {
+				SetForegroundWindow(FindWindowA(NULL, "The Witness"));
+			}
+			RECT r;
+			HWND hwndWitness = FindWindowA(NULL, "The Witness");
+			GetWindowRect(hwndWitness, &r);
+			if (hwndWitness != GetForegroundWindow()) {
+				ShowWindow(GetConsoleWindow(), SW_HIDE);
+			}
+			else if (!hide) {
+				ShowWindow(GetConsoleWindow(), SW_RESTORE);
+				SetWindowPos(GetConsoleWindow(), HWND_TOPMOST, r.left, r.top, 0, 0, SWP_NOSIZE);
+			}
 		}
 		Sleep(1);
 	}
