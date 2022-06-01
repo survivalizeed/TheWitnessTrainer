@@ -33,6 +33,8 @@ public:
 
 	void AddEntry(std::string_view name, uintptr_t dynamicBaseOffset, const std::vector<unsigned int>& offsets, uintptr_t endoffset);
 
+	void AddStaticEntry(std::string_view name, uintptr_t staticAddress);
+
 	bool IdleWait(std::string_view searchmessage,std::string_view foundmessage, std::function<void()> callback);
 
 	template<typename Ret>

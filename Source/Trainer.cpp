@@ -25,6 +25,11 @@ void Trainer::AddEntry(std::string_view name, uintptr_t dynamicBaseOffset, const
 	entrys[name] = addr + endoffset;
 }
 
+void Trainer::AddStaticEntry(std::string_view name, uintptr_t staticAddress)
+{
+	entrys[name] = staticAddress;
+}
+
 bool Trainer::IdleWait(std::string_view searchmessage, std::string_view foundmessage, std::function<void()> callback)
 {
 	std::cout << searchmessage << "\n";

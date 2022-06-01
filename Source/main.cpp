@@ -13,7 +13,7 @@
 #include "Ini.h"
 #include "../resource.h"
 
-#pragma comment(lib, "urlmon.lib")
+//Defines in Functions.h
 
 using namespace mINI;
 
@@ -136,10 +136,11 @@ int main() {
 
 	witness->AddEntry("XPos", 0x0062D0A8, { 0x148, 0x970, 0x228, 0x10, 0x50, 0x20, 0x30 }, 0x0);
 	witness->AddEntry("YPos", 0x0062D0A8, { 0x148, 0x970, 0x228, 0x10, 0x50, 0x20, 0x30 }, 0x4);
+	witness->AddStaticEntry("YCamPos", 0x140630498);
 	witness->AddEntry("ZPos", 0x0062D0A8, { 0x148, 0x970, 0x228, 0x10, 0x50, 0x20, 0x30 }, -0x4);
 	witness->AddEntry("Speed", 0x0062D0A8, { 0x148, 0x970, 0x228, 0x10, 0x50, 0x20, 0x30 }, 0x10C);
-	witness->AddEntry("UpDownRotPitch", 0x006303C0, {}, 0);
-	witness->AddEntry("LeftRightRotYaw", 0x006303BC, {}, 0);
+	witness->AddStaticEntry("UpDownRotPitch", 0x1406303C0);
+	witness->AddStaticEntry("LeftRightRotYaw", 0x1406303BC);
 	
 	bool hide = false;
 

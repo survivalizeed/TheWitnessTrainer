@@ -1,7 +1,9 @@
 #pragma once
 
 #pragma warning(disable: 6387)
+#pragma comment(lib, "urlmon.lib")
 #pragma comment(lib, "winmm.lib")
+
 #define log(x)\
 std::wcout << x << "\n"
 
@@ -46,6 +48,10 @@ inline void fnFly(std::shared_ptr<Trainer> witness, bool active) {
 			witness->Patch("YP9", 0x1401B4443, { 0x90, 0x90, 0x90 });
 			witness->Patch("YP10", 0x14023BE41, { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 });
 			witness->Patch("YP11", 0x1401B4443, { 0x90, 0x90, 0x90 });
+
+			//Camera
+			witness->Patch("YP12", 0x140247701, { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 });
+			witness->Patch("YP13", 0x1402470CD, { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 });
 		}
 		witness->Unfreeze();
 		return;
@@ -53,7 +59,7 @@ inline void fnFly(std::shared_ptr<Trainer> witness, bool active) {
 	for (int i = 1; i <= 6; ++i) {
 		witness->Restore("XP" + std::to_string(i));
 	}
-	for (int i = 1; i <= 11; ++i) {
+	for (int i = 1; i <= 13; ++i) {
 		witness->Restore("YP" + std::to_string(i));
 	}
 	witness->Unfreeze();
@@ -79,28 +85,40 @@ inline void fnFlyControls(std::shared_ptr<Trainer> witness, Dialog& dialog, INIS
 		if (input('W') && state) {
 			float yp = witness->Read<float>("YPos");
 			witness->Write("YPos", float(yp + (sinf(pitch) * 0.01 * speed)));
+			
+			float ycp = witness->Read<float>("YCamPos");
+			witness->Write("YCamPos", float(ycp + (sinf(pitch) * 0.01 * speed)));
+			
 			float xp = witness->Read<float>("XPos");
 			witness->Write("XPos", float(xp + (sinf(yaw) * 0.01 * speed)));
+			
 			float zp = witness->Read<float>("ZPos");
 			witness->Write("ZPos", float(zp + (cosf(yaw) * 0.01 * speed)));
 		}
 		if (input('S') && state) {
 			float yp = witness->Read<float>("YPos");
 			witness->Write("YPos", float(yp - (sinf(pitch) * 0.01 * speed)));
+			
+			float ycp = witness->Read<float>("YCamPos");
+			witness->Write("YCamPos", float(ycp - (sinf(pitch) * 0.01 * speed)));
+			
 			float xp = witness->Read<float>("XPos");
 			witness->Write("XPos", float(xp - (sinf(yaw) * 0.01 * speed)));
+			
 			float zp = witness->Read<float>("ZPos");
 			witness->Write("ZPos", float(zp - (cosf(yaw) * 0.01 * speed)));
 		}
 		if (input('A') && state) {
 			float xp = witness->Read<float>("XPos");
 			witness->Write("XPos", float(xp + (sinf(yaw + float(M_PI) / 2) * 0.01 * speed)));
+			
 			float zp = witness->Read<float>("ZPos");
 			witness->Write("ZPos", float(zp + (cosf(yaw + float(M_PI) / 2) * 0.01 * speed)));
 		}
 		if (input('D') && state) {
 			float xp = witness->Read<float>("XPos");
 			witness->Write("XPos", float(xp + (sinf(yaw - float(M_PI) / 2) * 0.01 * speed)));
+			
 			float zp = witness->Read<float>("ZPos");
 			witness->Write("ZPos", float(zp + (cosf(yaw - float(M_PI) / 2) * 0.01 * speed)));
 		}
