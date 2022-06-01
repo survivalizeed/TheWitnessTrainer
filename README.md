@@ -8,7 +8,7 @@ turned out to be a nice side project to refresh my reversing, hacking and C++ sk
 #### Please remember: This Trainer is still in a very early state and Reverse Engineering is often a stony path. So please expect some bugs!
   
   
-### Features:
+### Features:    (There are now a lot more features available. I just haven't had the time to update this list!)
 
 - GameChanger
   - Fly (speed customizable) | You can fly through walls but it is still not a no clip hack, which means that you will probably glitch through the world 
