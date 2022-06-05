@@ -1,20 +1,9 @@
 #pragma once
 
-#include <iostream>
-#include <vector>
-#include <map>
-#include <utility>
-#include <string_view>
-#include <Windows.h>
-#include <fcntl.h>
-#include <io.h>
-#include <stack>
-#include <algorithm>
-
-#define UNICODE
+#include "Includes.h"
 
 class Dialog {
-	
+
 #ifdef UNICODE
 	using dString = std::wstring;
 	using dChar = wchar_t;

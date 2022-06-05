@@ -1,19 +1,4 @@
-#include <iostream>
-#define _USE_MATH_DEFINES
-#include <math.h>
-#include <memory>
-#include <string>
-#include <fcntl.h>
-#include <io.h>
-#include <fstream>
-#include <algorithm>
-#include "Functions.h"
-#include "Trainer.h"
-#include "Dialog.h"
-#include "Ini.h"
-#include "../resource.h"
-
-//Defines in Functions.h
+#include "Includes.h"
 
 using namespace mINI;
 
@@ -69,14 +54,16 @@ int main() {
 	SetWindowTextA(_console, "-survivalizeed's-The-Witness-Trainer-");
 
 	if (GetFileAttributes("C:\\Users\\Public\\Documents\\sTWTsettings.ini") == INVALID_FILE_ATTRIBUTES && GetLastError() == ERROR_FILE_NOT_FOUND) {
+		MessageBoxA(NULL, "Customize the Trainers settings here: C:\\Users\\Public\\Documents\\sTWTsettings.ini", "Information", MB_ICONINFORMATION);
 		INIFile file("C:\\Users\\Public\\Documents\\sTWTsettings.ini");
 		INIStructure ini;
-		ini["movement"]["flySpeed"] = "25";
+		ini["movement"]["flySpeed"] = "10";
 		ini["movement"]["sprintSpeed"] = "20";
-		ini["misc"]["playTuneOnStart"] = "0";
+		ini["misc"]["playTuneOnStart"] = "1";
 		ini["misc"]["alphaStickToProcess"] = "100";
 		ini["misc"]["sprintKey"] = "0xA0";
 		ini["misc"]["teleportForceInterval"] = "10";
+		ini["misc"]["wAnimPath"] = "C:\\Users\\Public\\Downloads";
 		file.generate(ini);
 	}
 	INIFile file("C:\\Users\\Public\\Documents\\sTWTsettings.ini");
@@ -84,12 +71,13 @@ int main() {
 	file.read(ini);
 
 	Dialog dialog(L"-survivalizeed's-The-Witness-Trainer-");
-	dialog.Set("menu",	"gameChanger",	{ L"Numpad-0------------------GameChanger", false });
+	dialog.Set("menu",	"gameChanger",	{ L"Numpad-0-----------------Game-Changer", false });
 	dialog.Set("menu",	"fun",			{ L"Numpad-1--------------------------Fun", false });
 	dialog.Set("menu",	"misc",			{ L"Numpad-2-------------------------Misc", false });
 	dialog.Set("menu",	"teleports",	{ L"Numpad-3--------------------Teleports", false });
-	dialog.Set("menu",	"tune",			{ L"Numpad-4-------------------------Tune", false });
-	dialog.Set("menu",	"quit",			{ L"Numpad-5-------------------------Quit", false });
+	dialog.Set("menu",  "animations",	{ L"Numpad-4-------------------Animations", false });
+	dialog.Set("menu",	"tune",			{ L"Numpad-5-------------------------Tune", false });
+	dialog.Set("menu",	"quit",			{ L"Numpad-6-------------------------Quit", false });
 
 	dialog.Set("gameChanger",	"fly",					{ L"Numpad-0--------------------------Fly", false });
 	dialog.Set("gameChanger",	"fasterSprint",			{ L"Numpad-1----------------Faster-Sprint", false });
@@ -110,22 +98,27 @@ int main() {
 	dialog.Set("misc",	"stickToProcess",		{ L"Numpad-6-------------Stick-To-Process", false });
 	dialog.Set("misc",  "installHackedSave",	{ L"Numpad-7----------Install-Hacked-Save", false });
 
-	dialog.Set("teleports", "teleports1", { L"Numpad-0-------------------Teleports1", false });
-	dialog.Set("teleports", "teleports2", { L"Numpad-1-------------------Teleports2", false });
+	dialog.Set("teleports", "teleports1", { L"Numpad-0------------------Teleports-1", false });
+	dialog.Set("teleports", "teleports2", { L"Numpad-1------------------Teleports-2", false });
 
 	dialog.Set("teleports0", "tutorial",	{ L"Numpad-0---------------------Tutorial", false });
 	dialog.Set("teleports0", "turntable",	{ L"Numpad-1--------------------Turntable", false });
 	dialog.Set("teleports0", "top",			{ L"Numpad-2--------------------------Top", false });
 	dialog.Set("teleports0", "ruin",		{ L"Numpad-3-------------------------Ruin", false });
 	dialog.Set("teleports0", "end",			{ L"Numpad-4--------------------------End", false });
-	dialog.Set("teleports0", "stoneWoman",	{ L"Numpad-5------------------Stone Woman", false });
-	dialog.Set("teleports0", "oceanChair",	{ L"Numpad-6------------------Ocean Chair", false });
-	dialog.Set("teleports0", "handReach",	{ L"Numpad-7-------------------Hand Reach", false });
+	dialog.Set("teleports0", "stoneWoman",	{ L"Numpad-5------------------Stone-Woman", false });
+	dialog.Set("teleports0", "oceanChair",	{ L"Numpad-6------------------Ocean-Chair", false });
+	dialog.Set("teleports0", "handReach",	{ L"Numpad-7-------------------Hand-Reach", false });
 	dialog.Set("teleports0", "turtle",		{ L"Numpad-8-----------------------Turtle", false });
-	dialog.Set("teleports0", "endElevator",	{ L"Numpad-9-----------------End Elevator", false });
+	dialog.Set("teleports0", "endElevator",	{ L"Numpad-9-----------------End-Elevator", false });
 
-	dialog.Set("teleports1", "woodenView",	{ L"Numpad-0------------------Wooden View", false });
+	dialog.Set("teleports1", "woodenView",	{ L"Numpad-0------------------Wooden-View", false });
 
+	dialog.Set("animations", "addCurrentPosNode",	{ L"Numpad-0----Add-Current-Position-Node", false });
+	dialog.Set("animations", "loadWAnimFile",		{ L"Numpad-1--------------Load-wAnim-File", false });
+	dialog.Set("animations", "writeWAnimFile",		{ L"Numpad-2-------------Write-wAnim-File", false });
+	dialog.Set("animations", "playCurrentAnimation",{ L"Numpad-3-------Play-Current-Animation", false });
+	
 	dialog.PushDialog(dialog.GetDialog("menu"));
 
 	waveOutSetVolume(NULL, 0xAAAAAAAA);
@@ -143,13 +136,15 @@ int main() {
 	witness->AddStaticEntry("LeftRightRotYaw", 0x1406303BC);
 	
 	bool hide = false;
-
+	
 	float x, y, z;
 	x = y = z = 0.f;
 
 	int sprintKey{};
 
-	fnSprintKey(ini, sprintKey);
+	Animation currentAnimation(witness);
+
+	fnSprintKey(witness, ini, sprintKey);
 
 	POINT windowPos{};
 	std::thread tFlyControls(fnFlyControls, std::ref(witness), std::ref(dialog), std::ref(ini));
@@ -158,6 +153,11 @@ int main() {
 	tStickToProcess.detach();
 	std::thread tSprintControls(fnSprintControls, std::ref(witness), std::ref(dialog), std::ref(ini), std::ref(sprintKey));
 	tSprintControls.detach();
+
+	//Animation anim(witness);
+	//anim.Add({ {0.f,0.f,30.f}, {0.001f, 0.001f, 0.001f}, 270, 0, 0.001f, 0.001f });
+	//anim.Add({ {100.f,100.f,30.f}, {0.001f, 0.001f, 0.001f}, 0, 0, 0.001f, 0.001f });
+	//anim.StartAnimation(dialog);
 
 	while (witness->StillValid()) {		
 		if (!hide) {
@@ -174,7 +174,7 @@ int main() {
 				}
 				else if (dialog.GetDialog("gameChanger") == dialog.GetCurrentDialog()) {
 					dialog.InvertEntry("gameChanger", "fly");
-					fnFly(witness, dialog.GetEntry("gameChanger", "fly")->second);
+					fnRemAutoPosition(witness, dialog.GetEntry("gameChanger", "fly")->second);
 				}
 				else if (dialog.GetDialog("fun") == dialog.GetCurrentDialog()) {
 					dialog.InvertEntry("fun", "noNodLimit");
@@ -193,12 +193,13 @@ int main() {
 					}
 				}
 				else if (dialog.GetDialog("teleports0") == dialog.GetCurrentDialog()) {
-					fnRotation(witness, 0.0653167f, 2.88611f);
-					fnTeleport(witness, ini, -164.53f, 5.74332f, -133.377f);
+					fnTeleport(witness, dialog, ini, -164.53f, 5.74332f, -133.377f, 0.0653167f, 2.88611f);
 				}
 				else if (dialog.GetDialog("teleports1") == dialog.GetCurrentDialog()) {
-					fnRotation(witness, -0.0908066f, 1.76752f);
-					fnTeleport(witness, ini, -42.4168f, 35.6578f, 142.355f);
+					fnTeleport(witness, dialog, ini, -42.4168f, 35.6578f, 142.355f, -0.0908066f, 1.76752f);
+				}
+				else if (dialog.GetDialog("animations") == dialog.GetCurrentDialog()) {
+					currentAnimation.AddPosNode();
 				}
 				Sleep(200);
 			}
@@ -222,8 +223,17 @@ int main() {
 					}
 				}
 				else if (dialog.GetDialog("teleports0") == dialog.GetCurrentDialog()) {
-					fnRotation(witness, -0.402977f, -0.0448767f);
-					fnTeleport(witness, ini, -31.3635f, -11.7304f, -38.6826f);
+					fnTeleport(witness, dialog, ini, -31.3635f, -11.7304f, -38.6826f, -0.402977f, -0.0448767f);
+				}
+				else if (dialog.GetDialog("animations") == dialog.GetCurrentDialog()) {
+					system("CLS");
+					SetForegroundWindow(_console);
+					std::wcout << "File name: ";
+					std::wstring input;
+					std::wcin.clear();
+					std::wcin >> input;
+					currentAnimation.LoadwAnim(ini["misc"]["wAnimPath"] + "\\" + std::string(input.begin(), input.end()));
+					dialog.DisplayDialog();
 				}
 				Sleep(200);
 			}
@@ -249,8 +259,17 @@ int main() {
 					t1.detach();
 				}
 				else if (dialog.GetDialog("teleports0") == dialog.GetCurrentDialog()) {
-					fnRotation(witness, -0.182666f, 2.82946f);
-					fnTeleport(witness, ini, -51.6206f, 66.8419f, 144.698f);
+					fnTeleport(witness, dialog, ini, -51.6206f, 66.8419f, 144.698f, -0.182666f, 2.82946f);
+				}
+				else if (dialog.GetDialog("animations") == dialog.GetCurrentDialog()) {
+					system("CLS");
+					SetForegroundWindow(_console);
+					std::wcout << "File name: ";
+					std::wstring input;
+					std::wcin.clear();
+					std::wcin >> input;
+					currentAnimation.TowAnim(ini["misc"]["wAnimPath"] + "\\" + std::string(input.begin(), input.end()));
+					dialog.DisplayDialog();
 				}
 				Sleep(200);
 			}
@@ -275,18 +294,16 @@ int main() {
 					t1.detach();
 				}
 				else if (dialog.GetDialog("teleports0") == dialog.GetCurrentDialog()) {
-					fnRotation(witness, -0.334823f, -1.75872f);
-					fnTeleport(witness, ini, 135.093f, 39.3168f, 54.3465f);
+					fnTeleport(witness, dialog, ini, 135.093f, 39.3168f, 54.3465f, -0.334823f, -1.75872f);
+				}
+				else if (dialog.GetDialog("animations") == dialog.GetCurrentDialog()) {
+					currentAnimation.StartAnimation(dialog);
 				}
 				Sleep(200);
 			}
 			if (input(VK_NUMPAD4)) {
 				if (dialog.GetDialog("menu") == dialog.GetCurrentDialog()) {
-					if (dialog.GetEntry("menu", "tune")->second) 
-						PlaySound(NULL, NULL, SND_ASYNC);
-					else 
-						PlaySound("C:\\Users\\Public\\Documents\\Tune.wav", GetModuleHandle(NULL), SND_LOOP | SND_ASYNC);
-					dialog.InvertEntry("menu", "tune");
+					dialog.PushDialog(dialog.GetDialog("animations"));
 				}
 				else if (dialog.GetDialog("gameChanger") == dialog.GetCurrentDialog()) {
 					dialog.InvertEntry("gameChanger", "leaveSolveEnviroment");
@@ -297,19 +314,20 @@ int main() {
 				}
 				else if (dialog.GetDialog("misc") == dialog.GetCurrentDialog()) {
 					file.read(ini);
-					fnSprintKey(ini, sprintKey);
+					fnSprintKey(witness, ini, sprintKey);
 				}
 				else if (dialog.GetDialog("teleports0") == dialog.GetCurrentDialog()) {
-					fnRotation(witness, -0.0136076f, -3.01675f);
-					fnTeleport(witness, ini, -49.1121f, - 0.0246615f, 206.573f);
+					fnTeleport(witness, dialog, ini, -49.1121f, - 0.0246615f, 206.573f, -0.0136076f, -3.01675f);
 				}
 				Sleep(200);
 			}
 			if (input(VK_NUMPAD5)) {
 				if (dialog.GetDialog("menu") == dialog.GetCurrentDialog()) {
-					fnRestoreAll(witness);
-					CloseWindow(_console);
-					return 0;
+					if (dialog.GetEntry("menu", "tune")->second)
+						PlaySound(NULL, NULL, SND_ASYNC);
+					else
+						PlaySound("C:\\Users\\Public\\Documents\\Tune.wav", GetModuleHandle(NULL), SND_LOOP | SND_ASYNC);
+					dialog.InvertEntry("menu", "tune");
 				}
 				else if (dialog.GetDialog("gameChanger") == dialog.GetCurrentDialog()) {
 					x = witness->Read<float>("XPos");
@@ -324,15 +342,19 @@ int main() {
 						witness->Restore("MuteGame");
 				}
 				else if (dialog.GetDialog("teleports0") == dialog.GetCurrentDialog()) {
-					fnRotation(witness, 0.0322629f, -2.10936f);
-					fnTeleport(witness, ini, 125.004f, 0.477013f, 177.684f);
+					fnTeleport(witness, dialog, ini, 125.004f, 0.477013f, 177.684f, 0.0322629f, -2.10936f);
 				}
 				Sleep(200);
 			}
 			if (input(VK_NUMPAD6)) {
+				if (dialog.GetDialog("menu") == dialog.GetCurrentDialog()) {
+					fnRestoreAll(witness);
+					CloseWindow(_console);
+					return 0;
+				}
 				if (dialog.GetDialog("gameChanger") == dialog.GetCurrentDialog()) {
 					if (x != 0 && y != 0 && z != 0) {
-						fnTeleport(witness, ini, x, y, z);
+						fnTeleport(witness, dialog, ini, x, y, z, witness->Read<float>("LeftRightRotYaw"), witness->Read<float>("UpDownRotPitch"));
 					}
 				}
 				else if (dialog.GetDialog("misc") == dialog.GetCurrentDialog()) {
@@ -345,13 +367,13 @@ int main() {
 						windowPos.y = r.top;
 						SetWindowTextA(_console, "");
 						if (ini["misc"]["alphaStickToProcess"].empty()) {
-							error("alphaSticktoProcess no value!");
+							error("alphaSticktoProcess no value!", witness);
 						}
 						try {
 							SetLayeredWindowAttributes(_console, NULL, std::stoi(ini["misc"]["alphaStickToProcess"]), LWA_ALPHA);
 						}
 						catch (...) {
-							error("alphaStickToProcess illegal value!");
+							error("alphaStickToProcess illegal value!", witness);
 						}
 					}
 					else {
@@ -363,8 +385,7 @@ int main() {
 					}
 				}
 				else if (dialog.GetDialog("teleports0") == dialog.GetCurrentDialog()) {
-					fnRotation(witness, 0.102589f, 1.60719f);
-					fnTeleport(witness, ini, 211.974f, 9.97759f, 73.6323f);
+					fnTeleport(witness, dialog, ini, 211.974f, 9.97759f, 73.6323f, 0.102589f, 1.60719f);
 				}
 				Sleep(200);
 			}
@@ -379,22 +400,19 @@ int main() {
 						std::string("C:\\Users\\" + std::string(username) + "\\AppData\\Roaming\\The Witness\\TrainerSaveGame.png").c_str());
 				}
 				else if (dialog.GetDialog("teleports0") == dialog.GetCurrentDialog()) {
-					fnRotation(witness, 0.474406f, -2.83249f);
-					fnTeleport(witness, ini, 8.152f, 0.565118f, 211.562f);
+					fnTeleport(witness, dialog, ini, 8.152f, 0.565118f, 211.562f, 0.474406f, -2.83249f);
 				}
 				Sleep(200);
 			}
 			if (input(VK_NUMPAD8)) {
 				if (dialog.GetDialog("teleports0") == dialog.GetCurrentDialog()) {
-					fnRotation(witness, 0.010124f, 0.978153f);
-					fnTeleport(witness, ini, -43.3622f, 20.1339f, 68.5811f);
+					fnTeleport(witness, dialog, ini, -43.3622f, 20.1339f, 68.5811f, 0.010124f, 0.978153f);
 				}
 				Sleep(200);
 			}
 			if (input(VK_NUMPAD9)) {
 				if (dialog.GetDialog("teleports0") == dialog.GetCurrentDialog()) {
-					fnRotation(witness, -0.0250394f, -3.06025f);
-					fnTeleport(witness, ini, -48.6889f, -2.96041f, 212.258f);
+					fnTeleport(witness, dialog, ini, -48.6889f, -2.96041f, 212.258f, -0.0250394f, -3.06025f);
 				}
 				Sleep(200);
 			}

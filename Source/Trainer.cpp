@@ -57,11 +57,15 @@ void Trainer::WriteAddress(uintptr_t startaddress, const std::vector<BYTE>& byte
 
 void Trainer::Patch(std::string_view name, uintptr_t startaddress, const std::vector<BYTE>& instructions)
 {
+	int alreadyPatched = false;
 	std::vector<BYTE> tmp(instructions.size());
 	for (int i = 0; i < instructions.size(); ++i) {
 		ReadProcessMemory(hProcess, (BYTE*)startaddress, &tmp[i], sizeof(BYTE), nullptr);
+		if (tmp[i] == instructions[i])
+			alreadyPatched++;
 		startaddress++;
 	}
+	if (alreadyPatched == instructions.size()) return;
 	stores[name] = { startaddress - (instructions.size()), tmp };
 	WriteAddress(startaddress - (instructions.size()), instructions);
 }
