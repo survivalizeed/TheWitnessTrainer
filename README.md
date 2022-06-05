@@ -28,6 +28,14 @@ turned out to be a nice side project to refresh my reversing, hacking and C++ sk
   - ReloadSettings | Apply the changes you made in the config file to the Trainer
   - MuteGame | Mute the game. I patched out the games audio manager. I did not experience any bugs but it is still poorly explored
   - StickToProcess | Stick the window to the upper-left corner to imitate the feeling of an internal hack.
+  - InstallHackedSave | Installs a savegame which is unreachable without the use of hacks
+- Teleports
+  - Two menus each with some teleport options to known places
+- Animations
+  - AddCurrentPositionNode | Add your current position as a place to animate to. Play with it and get a feeling for it!
+  - LoadwAnimFile| Loads a wAnim file so you can load animations of others
+  - WritewAnimFile | Allows you to save your wAnimFile to share it or adjust speed settings and so on
+  - PlayCurrentAnimation | Plays the current animation 
 - Navigation
   - Numpad * | Hide and disable input for the Trainer
   - Backspace | Navigate back to the menu
