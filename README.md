@@ -32,4 +32,5 @@ turned out to be a nice side project to refresh my reversing, hacking and C++ sk
   - Numpad * | Hide and disable input for the Trainer
   - Backspace | Navigate back to the menu
 More features will be added soon. To your own benefit use the Quit option in the Trainer itself to automatically revert all changes to the process.  
-Also make sure only one of the SolutionSolver options is enabled at a time. Same applys to the DisableSave!
+Also make sure only one of the SolutionSolver options is enabled at a time. Same applys to the DisableSave!  
+If you installed a newer version of the Trainer make sure you delete the C:\Users\Public\Documents\sTWTsettings.ini to make sure you use the proper conig file!
