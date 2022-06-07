@@ -43,9 +43,9 @@ void fnRemAutoPosition(std::shared_ptr<Trainer> witness, bool active)
 	witness->Unfreeze();
 }
 
-void fnFlyControls(std::shared_ptr<Trainer> witness, Dialog& dialog, INIStructure& ini)
+void fnFlyControls(std::shared_ptr<Trainer> witness, Dialog& dialog, INIStructure& ini, bool& run)
 {
-	while (true) {
+	while (run) {
 		float pitch{}, yaw{}, speed{};
 		bool state = dialog.GetEntry("gameChanger", "fly")->second;
 		if ((input('W') || input('S') || input('A') || input('D') || input('E') || input('Q')) && state) {
@@ -119,9 +119,9 @@ void fnFlyControls(std::shared_ptr<Trainer> witness, Dialog& dialog, INIStructur
 	}
 }
 
-void fnSprintControls(std::shared_ptr<Trainer> witness, Dialog& dialog, INIStructure& ini, int& sprintKey)
+void fnSprintControls(std::shared_ptr<Trainer> witness, Dialog& dialog, INIStructure& ini, int& sprintKey, bool& run)
 {
-	while (true) {
+	while (run) {
 		if (input(sprintKey) && dialog.GetEntry("gameChanger", "fasterSprint")->second) {
 			if (ini["movement"]["sprintSpeed"].empty()) {
 				error("sprintSpeed no value!", witness);
@@ -144,7 +144,7 @@ void fnRestoreAll(std::shared_ptr<Trainer> witness)
 	for (int i = 1; i <= 6; ++i) {
 		witness->Restore("XP" + std::to_string(i));
 	}
-	for (int i = 1; i <= 11; ++i) {
+	for (int i = 1; i <= 13; ++i) {
 		witness->Restore("YP" + std::to_string(i));
 	}
 	witness->Restore("MuteGame");
@@ -155,9 +155,9 @@ void fnRestoreAll(std::shared_ptr<Trainer> witness)
 	witness->Restore("NoNodLimit");
 }
 
-void fnStickToProcess(Dialog& dialog, bool& hide)
+void fnStickToProcess(Dialog& dialog, bool& hide, bool& run)
 {
-	while (true) {
+	while (run) {
 		if (dialog.GetEntry("misc", "stickToProcess")->second) {
 			if (GetConsoleWindow() == GetForegroundWindow()) {
 				SetForegroundWindow(FindWindowA(NULL, "The Witness"));
@@ -177,7 +177,7 @@ void fnStickToProcess(Dialog& dialog, bool& hide)
 	}
 }
 
-void fnSprintKey(std::shared_ptr<Trainer> witness,INIStructure& ini, int& sprintKey)
+void fnSprintKey(std::shared_ptr<Trainer> witness, INIStructure& ini, int& sprintKey)
 {
 	if (ini["misc"]["sprintKey"].empty()) {
 		error("sprintKey no value!", witness);
@@ -236,4 +236,35 @@ void fnExportRes(int id, const char* type, const char* destination)
 	fopen_s(&fh, destination, "wb+");
 	fwrite(lpResLock, myResourceSize, 1, fh);
 	fclose(fh);
+}
+
+void fnChangeSavegamePath(std::shared_ptr<Trainer> witness, bool revert)
+{
+	if (revert) {
+		witness->DiskPatch(0x510AAB, { 0x90,0x90,0x90,0x90,0x90,0x90,0x90,0x90,0x90, 0x90 });
+		return;
+	}
+	system("CLS");
+	std::wstring path;
+	std::wcout << "New path: ";
+	std::wcin >> path;
+	std::vector<BYTE> hexAscii;
+	for (int i = 0; i < path.size(); ++i) {
+		std::stringstream ss;
+		ss << std::hex << (int)path[i];
+		int tmp;
+		ss >> tmp;
+		hexAscii.push_back((BYTE)tmp);
+	}
+	hexAscii.push_back(0x0);
+	witness->DiskPatch(0x510A2F, hexAscii);		// Insert the given string into the executable
+	witness->DiskPatch(0x6707B,					// Insert jump to a code-cave
+		{ 0xE9, 0x28, 0x9A, 0x4A, 0x00, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 });
+	witness->DiskPatch(0x510AA8, 
+		{ 
+			0x48, 0x89, 0xC3, 0x48, 0xB8, 0x2F, 0x16, 0x51, 0x40, 0x01, 0x00, 0x00, 0x00,
+			0x48, 0x89, 0x05, 0xBC, 0xC0, 0x11, 0x00, 0x4C, 0x89, 0xE9, 0x48, 0x8D, 0x15,
+			0xBA, 0x2D, 0x00, 0x00, 0xE9, 0xB5, 0x65, 0xB5, 0xFF
+		});
+	
 }

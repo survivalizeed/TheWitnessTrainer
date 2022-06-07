@@ -21,7 +21,7 @@ void Animation::StartAnimation(Dialog& dialog)
 		dir.y = next.position.y - current.position.y;
 		dir.z = next.position.z - current.position.z;
 		float nf = dir.Normalize();
-
+		
 		float rotHinc{};
 		float rotVinc{};
 
@@ -152,9 +152,14 @@ void Animation::LoadwAnim(std::string_view path)
 void Animation::AddPosNode()
 {
 	this->Add(AnimationNode({ witness->Read<float>("XPos"), witness->Read<float>("YPos"), witness->Read<float>("ZPos") },
-		{ 0.0005f, 0.0005f, 0.0005f },
+		{ 0.0002f, 0.0002f, 0.0002f },
 		Animation::WitRadToDegH(witness->Read<float>("LeftRightRotYaw")),
-		Animation::WitRadToDegV(witness->Read<float>("UpDownRotPitch")), 0.0005f, 0.0005f));
+		Animation::WitRadToDegV(witness->Read<float>("UpDownRotPitch")), 0.0002f, 0.0002f));
+}
+
+void Animation::Clear()
+{
+	nodes.clear();
 }
 
 

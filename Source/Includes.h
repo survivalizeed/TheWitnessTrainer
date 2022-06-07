@@ -1,6 +1,7 @@
 #pragma once
 
 #pragma warning(disable: 6387)
+#pragma warning(disable: 26449)
 #pragma comment(lib, "urlmon.lib")
 #pragma comment(lib, "winmm.lib")
 

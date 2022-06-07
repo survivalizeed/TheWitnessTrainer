@@ -41,6 +41,8 @@ public:
 
 	void AddPosNode();
 	
+	void Clear();
+
 	static float DegToWitRad(float deg);
 
 	static float WitRadToDegH(float witRad);
