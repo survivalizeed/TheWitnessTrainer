@@ -77,11 +77,12 @@ int main() {
 		dialog.Set("menu", "gameChanger", { L"Numpad-0-----------------Game-Changer", false });
 		dialog.Set("menu", "fun", { L"Numpad-1--------------------------Fun", false });
 		dialog.Set("menu", "misc", { L"Numpad-2-------------------------Misc", false });
-		dialog.Set("menu", "teleports", { L"Numpad-3--------------------Teleports", false });
-		dialog.Set("menu", "animations", { L"Numpad-4-------------------Animations", false });
-		dialog.Set("menu", "reattach", { L"Numpad-5---------------------Reattach", false });
-		dialog.Set("menu", "tune", { L"Numpad-6-------------------------Tune", false });
-		dialog.Set("menu", "quit", { L"Numpad-7-------------------------Quit", false });
+		dialog.Set("menu", "disables", { L"Numpad-3---------------------Disables", false });
+		dialog.Set("menu", "teleports", { L"Numpad-4--------------------Teleports", false });
+		dialog.Set("menu", "animations", { L"Numpad-5-------------------Animations", false });
+		dialog.Set("menu", "reattach", { L"Numpad-6---------------------Reattach", false });
+		dialog.Set("menu", "tune", { L"Numpad-7-------------------------Tune", false });
+		dialog.Set("menu", "quit", { L"Numpad-8-------------------------Quit", false });
 
 		dialog.Set("gameChanger", "fly", { L"Numpad-0--------------------------Fly", false });
 		dialog.Set("gameChanger", "fasterSprint", { L"Numpad-1----------------Faster-Sprint", false });
@@ -93,22 +94,22 @@ int main() {
 
 		dialog.Set("fun", "noNodLimit", { L"Numpad-0-----------------No-Nod-Limit", false });
 
-		dialog.Set("misc", "misc0", { L"Numpad-0-----------------------Misc-0", false });
-		dialog.Set("misc", "misc1", { L"Numpad-1-----------------------Misc-1", false });
 
-		dialog.Set("misc0", "disableSave", { L"Numpad-0-----------------Disable-Save", false });
-		dialog.Set("misc0", "disableSaveNoMessage", { L"Numpad-1------Disable-Save-No-Message", false });
-		dialog.Set("misc0", "openGameDirectory", { L"Numpad-2----------Open-Game-Directory", false });
-		dialog.Set("misc0", "openSettings", { L"Numpad-3----------------Open-Settings", false });
-		dialog.Set("misc0", "reloadSettings", { L"Numpad-4--------------Reload-Settings", false });
-		dialog.Set("misc0", "muteGame", { L"Numpad-5--------------------Mute-Game", false });
-		dialog.Set("misc0", "stickToProcess", { L"Numpad-6-------------Stick-To-Process", false });
-		dialog.Set("misc0", "installHackedSave", { L"Numpad-7----------Install-Hacked-Save", false });
-		dialog.Set("misc0", "disableStartDialog", { L"Numpad-8---------Disable-Start-Dialog", false });
-		dialog.Set("misc0", "enableStartDialog", { L"Numpad-9----------Enable-Start-Dialog", false });
+		dialog.Set("misc", "openGameDirectory", { L"Numpad-0----------Open-Game-Directory", false });
+		dialog.Set("misc", "openSettings", { L"Numpad-1----------------Open-Settings", false });
+		dialog.Set("misc", "reloadSettings", { L"Numpad-2--------------Reload-Settings", false });
+		dialog.Set("misc", "muteGame", { L"Numpad-3--------------------Mute-Game", false });
+		dialog.Set("misc", "stickToProcess", { L"Numpad-4-------------Stick-To-Process", false });
+		dialog.Set("misc", "installHackedSave", { L"Numpad-5----------Install-Hacked-Save", false });
 
-		dialog.Set("misc1", "changeSaveGamePath", { L"Numpad-0---------Change-Savegame-Path", false });
-		dialog.Set("misc1", "revertSaveGamePath", { L"Numpad-1---------Revert-Savegame-Path", false });
+
+		dialog.Set("disables", "changeSaveGamePath", { L"Numpad-0---------Change-Savegame-Path", false });
+		dialog.Set("disables", "revertSaveGamePath", { L"Numpad-1---------Revert-Savegame-Path", false });
+		dialog.Set("disables", "disableWitnessSettings", { L"Numpad-2-----Disable-Witness-Settings", false });
+		dialog.Set("disables", "disableSave", { L"Numpad-3-----------------Disable-Save", false });
+		dialog.Set("disables", "disableSaveNoMessage", { L"Numpad-4------Disable-Save-No-Message", false });
+		dialog.Set("disables", "disableStartDialog", { L"Numpad-5---------Disable-Start-Dialog", false });
+		dialog.Set("disables", "enableStartDialog", { L"Numpad-6----------Enable-Start-Dialog", false });
 
 		dialog.Set("teleports", "teleports0", { L"Numpad-0------------------Teleports-0", false });
 		dialog.Set("teleports", "teleports1", { L"Numpad-1------------------Teleports-1", false });
@@ -194,18 +195,11 @@ int main() {
 							witness->Restore("NoNodLimit");
 					}
 					else if (dialog.GetDialog("misc") == dialog.GetCurrentDialog()) {
-						dialog.PushDialog(dialog.GetDialog("misc0"));
+						std::string filename = witness->GetProcPath();
+						std::string command = (("explorer " + filename).substr(0, ("explorer " + std::string(filename)).find_last_of("\\/")));
+						system(command.c_str());
 					}
-					else if (dialog.GetDialog("misc0") == dialog.GetCurrentDialog()) {
-						dialog.InvertEntry("misc0", "disableSave");
-						if (dialog.GetEntry("misc0", "disableSave")->second)
-							witness->Patch("DisableSave", 0x140064C09, { 0x90, 0x90, 0x90, 0x90, 0x90 });
-						else {
-							witness->WriteAddress(0x140064C09, { 0xE8, 0x42, 0x17, 0x00, 0x00 });
-							dialog.Set("misc0", "disableSaveNoMessage", { L"", false });
-						}
-					}
-					else if (dialog.GetDialog("misc1") == dialog.GetCurrentDialog()) {
+					else if (dialog.GetDialog("disables") == dialog.GetCurrentDialog()) {
 						fnChangeSavegamePath(witness, false);
 						dialog.DisplayDialog();
 					}
@@ -231,18 +225,10 @@ int main() {
 						dialog.InvertEntry("gameChanger", "fasterSprint");
 					}
 					else if (dialog.GetDialog("misc") == dialog.GetCurrentDialog()) {
-						dialog.PushDialog(dialog.GetDialog("misc1"));
+						std::thread t1(system, "notepad C:\\Users\\Public\\Documents\\sTWTsettings.ini");
+						t1.detach();
 					}
-					else if (dialog.GetDialog("misc0") == dialog.GetCurrentDialog()) {
-						dialog.InvertEntry("misc0", "disableSaveNoMessage");
-						if (dialog.GetEntry("misc0", "disableSaveNoMessage")->second)
-							witness->Patch("DisableSaveNoMessage", 0x140064C09, { 0xB8, 0x01, 0x00, 0x00, 0x00 });
-						else {
-							witness->WriteAddress(0x140064C09, { 0xE8, 0x42, 0x17, 0x00, 0x00 });
-							dialog.Set("misc0", "disableSave", { L"", false });
-						}
-					}
-					else if (dialog.GetDialog("misc1") == dialog.GetCurrentDialog()) {
+					else if (dialog.GetDialog("disables") == dialog.GetCurrentDialog()) {
 						fnChangeSavegamePath(witness, true);
 						dialog.DisplayDialog();
 					}
@@ -254,9 +240,8 @@ int main() {
 						SetForegroundWindow(_console);
 						std::wcout << "File name: ";
 						std::wstring input;
-						std::wcin.clear();
-						std::wcin >> input;
-						currentAnimation.LoadwAnim(ini["misc0"]["wAnimPath"] + "\\" + std::string(input.begin(), input.end()));
+						std::getline(std::wcin, input);
+						currentAnimation.LoadwAnim(ini["misc"]["wAnimPath"] + "\\" + std::string(input.begin(), input.end()));
 						dialog.DisplayDialog();
 					}
 					Sleep(200);
@@ -275,13 +260,16 @@ int main() {
 							dialog.Set("gameChanger", "leaveSolve", { L"", false });
 						}
 					}
-					else if (dialog.GetDialog("misc0") == dialog.GetCurrentDialog()) {
-						DWORD size = MAX_PATH;
-						char* filename = new char[MAX_PATH];
-						QueryFullProcessImageNameA(witness->GetProcHandle(), 0, filename, &size);
-						std::thread t1(system, (("explorer " + std::string(filename)).substr(0, ("explorer " + std::string(filename)).find_last_of("\\/"))).c_str());
-						t1.detach();
-						delete[] filename;
+					else if (dialog.GetDialog("misc") == dialog.GetCurrentDialog()) {
+						file.read(ini);
+						fnSprintKey(witness, ini, sprintKey);
+					}
+					else if (dialog.GetDialog("disables") == dialog.GetCurrentDialog()) {
+						dialog.InvertEntry("disables", "disableWitnessSettings");
+						if (dialog.GetEntry("disables", "disableWitnessSettings")->second)
+							witness->Patch("DisableWitnessSettings", 0x1401FC787, { 0x90, 0x90 });
+						else
+							witness->Restore("DisableWitnessSettings");
 					}
 					else if (dialog.GetDialog("teleports0") == dialog.GetCurrentDialog()) {
 						fnTeleport(witness, dialog, ini, -51.6206f, 66.8419f, 144.698f, -0.182666f, 2.82946f);
@@ -291,16 +279,15 @@ int main() {
 						SetForegroundWindow(_console);
 						std::wcout << "File name: ";
 						std::wstring input;
-						std::wcin.clear();
-						std::wcin >> input;
-						currentAnimation.TowAnim(ini["misc0"]["wAnimPath"] + "\\" + std::string(input.begin(), input.end()));
+						std::getline(std::wcin, input);
+						currentAnimation.TowAnim(ini["misc"]["wAnimPath"] + "\\" + std::string(input.begin(), input.end()));
 						dialog.DisplayDialog();
 					}
 					Sleep(200);
 				}
 				if (input(VK_NUMPAD3)) {
 					if (dialog.GetDialog("menu") == dialog.GetCurrentDialog()) {
-						dialog.PushDialog(dialog.GetDialog("teleports"));
+						dialog.PushDialog(dialog.GetDialog("disables"));
 					}
 					else if (dialog.GetDialog("gameChanger") == dialog.GetCurrentDialog()) {
 						dialog.InvertEntry("gameChanger", "leaveSolve");
@@ -314,9 +301,21 @@ int main() {
 							dialog.Set("gameChanger", "allSolutionsWork", { L"", false });
 						}
 					}
-					else if (dialog.GetDialog("misc0") == dialog.GetCurrentDialog()) {
-						std::thread t1(system, "notepad C:\\Users\\Public\\Documents\\sTWTsettings.ini");
-						t1.detach();
+					else if (dialog.GetDialog("misc") == dialog.GetCurrentDialog()) {
+						dialog.InvertEntry("misc", "muteGame");
+						if (dialog.GetEntry("misc", "muteGame")->second)
+							witness->Patch("MuteGame", 0x1402A94B0, { 0xC3, 0x90, 0x90 });
+						else
+							witness->Restore("MuteGame");
+					}
+					else if (dialog.GetDialog("disables") == dialog.GetCurrentDialog()) {
+						dialog.InvertEntry("disables", "disableSave");
+						if (dialog.GetEntry("disables", "disableSave")->second)
+							witness->Patch("DisableSave", 0x140064C09, { 0x90, 0x90, 0x90, 0x90, 0x90 });
+						else {
+							witness->WriteAddress(0x140064C09, { 0xE8, 0x42, 0x17, 0x00, 0x00 });
+							dialog.Set("disables", "disableSaveNoMessage", { L"", false });
+						}
 					}
 					else if (dialog.GetDialog("teleports0") == dialog.GetCurrentDialog()) {
 						fnTeleport(witness, dialog, ini, 135.093f, 39.3168f, 54.3465f, -0.334823f, -1.75872f);
@@ -328,7 +327,7 @@ int main() {
 				}
 				if (input(VK_NUMPAD4)) {
 					if (dialog.GetDialog("menu") == dialog.GetCurrentDialog()) {
-						dialog.PushDialog(dialog.GetDialog("animations"));
+						dialog.PushDialog(dialog.GetDialog("teleports"));
 					}
 					else if (dialog.GetDialog("gameChanger") == dialog.GetCurrentDialog()) {
 						dialog.InvertEntry("gameChanger", "leaveSolveEnviroment");
@@ -337,67 +336,20 @@ int main() {
 						else
 							witness->Restore("LeaveSolveEnviroment");
 					}
-					else if (dialog.GetDialog("misc0") == dialog.GetCurrentDialog()) {
-						file.read(ini);
-						fnSprintKey(witness, ini, sprintKey);
-					}
-					else if (dialog.GetDialog("teleports0") == dialog.GetCurrentDialog()) {
-						fnTeleport(witness, dialog, ini, -49.1121f, -0.0246615f, 206.573f, -0.0136076f, -3.01675f);
-					}
-					else if (dialog.GetDialog("animations") == dialog.GetCurrentDialog()) {
-						currentAnimation.Clear();
-					}
-					Sleep(200);
-				}
-				if (input(VK_NUMPAD5)) {
-					if (dialog.GetDialog("menu") == dialog.GetCurrentDialog()) {
-						fnRestoreAll(witness);
-						break;
-					}
-					else if (dialog.GetDialog("gameChanger") == dialog.GetCurrentDialog()) {
-						x = witness->Read<float>("XPos");
-						y = witness->Read<float>("YPos");
-						z = witness->Read<float>("ZPos");
-					}
-					else if (dialog.GetDialog("misc0") == dialog.GetCurrentDialog()) {
-						dialog.InvertEntry("misc0", "muteGame");
-						if (dialog.GetEntry("misc0", "muteGame")->second)
-							witness->Patch("MuteGame", 0x1402A94B0, { 0xC3, 0x90, 0x90 });
-						else
-							witness->Restore("MuteGame");
-					}
-					else if (dialog.GetDialog("teleports0") == dialog.GetCurrentDialog()) {
-						fnTeleport(witness, dialog, ini, 125.004f, 0.477013f, 177.684f, 0.0322629f, -2.10936f);
-					}
-					Sleep(200);
-				}
-				if (input(VK_NUMPAD6)) {
-					if (dialog.GetDialog("menu") == dialog.GetCurrentDialog()) {
-						if (dialog.GetEntry("menu", "tune")->second)
-							PlaySound(NULL, NULL, SND_ASYNC);
-						else
-							PlaySound("C:\\Users\\Public\\Documents\\Tune.wav", GetModuleHandle(NULL), SND_LOOP | SND_ASYNC);
-						dialog.InvertEntry("menu", "tune");
-					}
-					if (dialog.GetDialog("gameChanger") == dialog.GetCurrentDialog()) {
-						if (x != 0 && y != 0 && z != 0) {
-							fnTeleport(witness, dialog, ini, x, y, z, witness->Read<float>("LeftRightRotYaw"), witness->Read<float>("UpDownRotPitch"));
-						}
-					}
-					else if (dialog.GetDialog("misc0") == dialog.GetCurrentDialog()) {
+					else if (dialog.GetDialog("misc") == dialog.GetCurrentDialog()) {
 						dialog.compactMode = !dialog.compactMode;
-						dialog.InvertEntry("misc0", "stickToProcess");
-						if (dialog.GetEntry("misc0", "stickToProcess")->second) {
+						dialog.InvertEntry("misc", "stickToProcess");
+						if (dialog.GetEntry("misc", "stickToProcess")->second) {
 							RECT r;
 							GetWindowRect(_console, &r);
 							windowPos.x = r.left;
 							windowPos.y = r.top;
 							SetWindowTextA(_console, "");
-							if (ini["misc0"]["alphaStickToProcess"].empty()) {
+							if (ini["misc"]["alphaStickToProcess"].empty()) {
 								error("alphaSticktoProcess no value!", witness);
 							}
 							try {
-								SetLayeredWindowAttributes(_console, NULL, std::stoi(ini["misc0"]["alphaStickToProcess"]), LWA_ALPHA);
+								SetLayeredWindowAttributes(_console, NULL, std::stoi(ini["misc"]["alphaStickToProcess"]), LWA_ALPHA);
 							}
 							catch (...) {
 								error("alphaStickToProcess illegal value!", witness);
@@ -411,19 +363,33 @@ int main() {
 							ShowWindow(_console, SW_SHOW);
 						}
 					}
+					else if (dialog.GetDialog("disables") == dialog.GetCurrentDialog()) {
+						dialog.InvertEntry("disables", "disableSaveNoMessage");
+						if (dialog.GetEntry("disables", "disableSaveNoMessage")->second)
+							witness->Patch("DisableSaveNoMessage", 0x140064C09, { 0xB8, 0x01, 0x00, 0x00, 0x00 });
+						else {
+							witness->WriteAddress(0x140064C09, { 0xE8, 0x42, 0x17, 0x00, 0x00 });
+							dialog.Set("disables", "disableSave", { L"", false });
+						}
+					}
 					else if (dialog.GetDialog("teleports0") == dialog.GetCurrentDialog()) {
-						fnTeleport(witness, dialog, ini, 211.974f, 9.97759f, 73.6323f, 0.102589f, 1.60719f);
+						fnTeleport(witness, dialog, ini, -49.1121f, -0.0246615f, 206.573f, -0.0136076f, -3.01675f);
+					}
+					else if (dialog.GetDialog("animations") == dialog.GetCurrentDialog()) {
+						currentAnimation.Clear();
 					}
 					Sleep(200);
 				}
-				if (input(VK_NUMPAD7)) {
+				if (input(VK_NUMPAD5)) {
 					if (dialog.GetDialog("menu") == dialog.GetCurrentDialog()) {
-						fnRestoreAll(witness);
-						CloseWindow(_console);
-						std::cout << "Trainer Closed...";
-						return 0;
+						dialog.PushDialog(dialog.GetDialog("animations"));
 					}
-					else if (dialog.GetDialog("misc0") == dialog.GetCurrentDialog()) {
+					else if (dialog.GetDialog("gameChanger") == dialog.GetCurrentDialog()) {
+						x = witness->Read<float>("XPos");
+						y = witness->Read<float>("YPos");
+						z = witness->Read<float>("ZPos");
+					}
+					else if (dialog.GetDialog("misc") == dialog.GetCurrentDialog()) {
 						char username[256 + 1];
 						DWORD username_len = 256 + 1;
 						GetUserNameA(username, &username_len);
@@ -432,17 +398,57 @@ int main() {
 						fnExportRes(IDB_PNG1, "PNG",
 							std::string("C:\\Users\\" + std::string(username) + "\\AppData\\Roaming\\The Witness\\TrainerSaveGame.png").c_str());
 					}
+					else if (dialog.GetDialog("disables") == dialog.GetCurrentDialog()) {
+						int result = MessageBoxA(NULL, "This will close The Witness! Do you want to continue?", "Waiting for input...", MB_YESNO);
+						if (result == IDYES) {
+							witness->DiskPatch(0x35EEAE, { 0xEB });
+						}
+					}
+					else if (dialog.GetDialog("teleports0") == dialog.GetCurrentDialog()) {
+						fnTeleport(witness, dialog, ini, 125.004f, 0.477013f, 177.684f, 0.0322629f, -2.10936f);
+					}
+					Sleep(200);
+				}
+				if (input(VK_NUMPAD6)) {
+					if (dialog.GetDialog("menu") == dialog.GetCurrentDialog()) {
+						fnRestoreAll(witness);
+						break;
+					}
+					if (dialog.GetDialog("gameChanger") == dialog.GetCurrentDialog()) {
+						if (x != 0 && y != 0 && z != 0) {
+							fnTeleport(witness, dialog, ini, x, y, z, witness->Read<float>("LeftRightRotYaw"), witness->Read<float>("UpDownRotPitch"));
+						}
+					}
+					else if (dialog.GetDialog("disables") == dialog.GetCurrentDialog()) {
+						int result = MessageBoxA(NULL, "This will close The Witness! Do you want to continue?", "Waiting for input...", MB_YESNO);
+						if (result == IDYES) {
+							witness->DiskPatch(0x35EEAE, { 0x74 });
+						}
+					}
+					else if (dialog.GetDialog("teleports0") == dialog.GetCurrentDialog()) {
+						fnTeleport(witness, dialog, ini, 211.974f, 9.97759f, 73.6323f, 0.102589f, 1.60719f);
+					}
+					Sleep(200);
+				}
+				if (input(VK_NUMPAD7)) {
+					if (dialog.GetDialog("menu") == dialog.GetCurrentDialog()) {
+						if (dialog.GetEntry("menu", "tune")->second)
+							PlaySound(NULL, NULL, SND_ASYNC);
+						else
+							PlaySound("C:\\Users\\Public\\Documents\\Tune.wav", GetModuleHandle(NULL), SND_LOOP | SND_ASYNC);
+						dialog.InvertEntry("menu", "tune");
+					}
 					else if (dialog.GetDialog("teleports0") == dialog.GetCurrentDialog()) {
 						fnTeleport(witness, dialog, ini, 8.152f, 0.565118f, 211.562f, 0.474406f, -2.83249f);
 					}
 					Sleep(200);
 				}
 				if (input(VK_NUMPAD8)) {
-					if (dialog.GetDialog("misc0") == dialog.GetCurrentDialog()) {
-						int result = MessageBoxA(NULL, "This will restart The Witness! Do you want to continue?", "Waiting for input...", MB_YESNO);
-						if (result == IDYES) {
-							witness->DiskPatch(0x35EEAE, { 0xEB });
-						}
+					if (dialog.GetDialog("menu") == dialog.GetCurrentDialog()) {
+						fnRestoreAll(witness);
+						CloseWindow(_console);
+						std::cout << "Trainer Closed...";
+						return 0;
 					}
 					else if (dialog.GetDialog("teleports0") == dialog.GetCurrentDialog()) {
 						fnTeleport(witness, dialog, ini, -43.3622f, 20.1339f, 68.5811f, 0.010124f, 0.978153f);
@@ -450,13 +456,8 @@ int main() {
 					Sleep(200);
 				}
 				if (input(VK_NUMPAD9)) {
-					if (dialog.GetDialog("misc0") == dialog.GetCurrentDialog()) {
-						int result = MessageBoxA(NULL, "This will restart The Witness! Do you want to continue?", "Waiting for input...", MB_YESNO);
-						if (result == IDYES) {
-							witness->DiskPatch(0x35EEAE, { 0x74 });
-						}
-					}
-					else if (dialog.GetDialog("teleports0") == dialog.GetCurrentDialog()) {
+
+					if (dialog.GetDialog("teleports0") == dialog.GetCurrentDialog()) {
 						fnTeleport(witness, dialog, ini, -48.6889f, -2.96041f, 212.258f, -0.0250394f, -3.06025f);
 					}
 					Sleep(200);

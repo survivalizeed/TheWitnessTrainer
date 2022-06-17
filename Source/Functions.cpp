@@ -247,7 +247,7 @@ void fnChangeSavegamePath(std::shared_ptr<Trainer> witness, bool revert)
 	system("CLS");
 	std::wstring path;
 	std::wcout << "New path: ";
-	std::wcin >> path;
+	std::getline(std::wcin, path);
 	std::vector<BYTE> hexAscii;
 	for (int i = 0; i < path.size(); ++i) {
 		std::stringstream ss;

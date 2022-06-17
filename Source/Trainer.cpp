@@ -40,6 +40,11 @@ bool Trainer::IdleWait(std::string_view searchmessage, std::string_view foundmes
 			std::cout << foundmessage << "\n";
 			hProcess = OpenProcess(PROCESS_ALL_ACCESS, NULL, procId);
 			modBase = GetModuleBaseAddress();
+			DWORD size = MAX_PATH;
+			char* filename = new char[MAX_PATH];
+			QueryFullProcessImageNameA(GetProcHandle(), 0, filename, &size);
+			procPath = filename;
+			delete[] filename;
 			return true;
 		}
 		Sleep(1);
