@@ -3,7 +3,7 @@
 Please don't use this program to fake speedruns or such things.  
 I originally created this trainer to be able to unlock everything until I reach my lost savegame but it  
 turned out to be a nice side project to refresh my reversing, hacking and C++ skills :)
-##### Tools used: Cheat Engine, x64dbg, IDApro, Visual Studio 2022 C++ and Defuse.ca x86 disassembler 
+##### Tools used: Cheat Engine, x64dbg, IDApro, Visual Studio 2022 C++ and Defuse.ca x86 disassembler (GUI QT)
 ##### If you have any questions contact me on Discord: survivalizeed#7659
 #### Please remember: This Trainer is still in a very early state and Reverse Engineering is often a stony path. So please expect some bugs!
   
