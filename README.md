@@ -14,8 +14,8 @@ turned out to be a nice side project to refresh my reversing, hacking and C++ sk
   - Fly (speed customizable) | You can fly through walls but it is still not a no clip hack, which means that you will probably glitch through the world 
   - FasterSprint (speed customizable) | Lets you customize your sprint speed
   - AllSolutionsWork | No matter how you draw the laser through the puzzle it will always be correct 
-  - LeaveSolve | Pretty much the same as AllSolutionsWork but you don't have to drag it to the end. It will solve the puzzle as soon as you leave the puzzle. This is useful for partially locked puzzles
-  - LeaveSolveEnviroment | Same as LeaveSolve but this one is for the enviromental puzzles.
+  - LeaveSolve (Solve On Leave) | Pretty much the same as AllSolutionsWork but you don't have to drag it to the end. It will solve the puzzle as soon as you leave the puzzle. This is useful for partially locked puzzles
+  - LeaveSolveEnviroment (Solve On Leave E)| Same as LeaveSolve but this one is for the enviromental puzzles.
   - SavePosition | Saves your current position
   - MoveToPosition | Move yourself to the previously stored position
 - Fun
