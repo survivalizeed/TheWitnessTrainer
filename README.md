@@ -6,7 +6,8 @@ turned out to be a nice side project to refresh my reversing, hacking and C++ sk
 ##### Tools used: Cheat Engine, x64dbg, IDApro, Visual Studio 2022 C++ and Defuse.ca x86 disassembler (GUI QT)
 ##### If you have any questions contact me on Discord: survivalizeed#7659
 #### Please remember: This Trainer is still in a very early state and Reverse Engineering is often a stony path. So please expect some bugs!
-  
+
+## Currently working on an UI version with QT!
   
 ### Features:    (There are now a lot more features available. I just haven't had the time to update this list!)
 
