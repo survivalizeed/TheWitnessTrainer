@@ -26,6 +26,6 @@ struct World
 	bool __fastcall save_game(LPCCH lpMultiByteStr, long a2, const void *a3, DWORD a4); //0x140066350
 
 	// Probably a function deep down in the callstack. 
-	long __fastcall sound(long a1) //0x1402A94B0
+	long __fastcall sound(long a1); //0x1402A94B0
 	
 }
