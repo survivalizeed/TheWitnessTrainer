@@ -12,7 +12,7 @@ struct Player //[base: 0x140062D0A8, offsets: { 0x148, 0x970, 0x228, 0x10, 0x50,
 	float* yaw; //0x1406303BC
 	int* pitchlimiter; //0x14023CCA2
 	
-	long __fastcall puzzle_rotation_autocorrect(float a1, float a2) //0x140246470
+	long __fastcall puzzle_rotation_autocorrect(float a1, float a2); //0x140246470
 	
 	long __fastcall puzzle_solved(long param1, char param2, long param3); //0x1400BF330
 	//Deciding line: 0x1400BF552
